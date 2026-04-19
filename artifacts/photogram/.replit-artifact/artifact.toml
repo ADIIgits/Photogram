@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Photogram"
+version = "1.0.0"
+id = "artifacts/photogram"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21694
+
+[services.development]
+run = "pnpm --filter @workspace/photogram run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/photogram", "run", "build" ]
+publicDir = "artifacts/photogram/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21694"
+BASE_PATH = "/"

@@ -1,0 +1,263 @@
+Build a full-stack social media web app called **Photogram** for photographers.
+
+## 🧱 Tech Stack
+
+* Frontend: React (Vite) + TailwindCSS
+* Backend: Node.js + Express
+* Database: PostgreSQL (via Prisma ORM)
+* Auth: JWT (access + refresh tokens)
+* File Uploads: Cloudinary (or mock if keys not provided)
+* State: React Query (TanStack Query)
+
+---
+
+## 🎯 Core Features
+
+### 1. Authentication
+
+* Signup / Login / Logout
+* JWT-based auth
+* Protected routes
+* Endpoint:
+
+  * POST /auth/signup
+  * POST /auth/login
+  * POST /auth/refresh
+  * GET /auth/me
+
+---
+
+### 2. Users
+
+* View profile
+* Update profile
+* Follow / Unfollow users
+
+Fields:
+
+* id
+* name
+* email
+* avatar_url
+* created_at
+
+Endpoints:
+
+* GET /users/:id
+* PATCH /users/:id
+* POST /users/:id/follow
+* DELETE /users/:id/follow
+
+---
+
+### 3. Posts
+
+Each post contains:
+
+* image
+* title
+* caption
+* optional camera reference
+* created_at
+
+Endpoints:
+
+* GET /posts (global feed)
+* GET /posts/:id
+* POST /posts
+* PATCH /posts/:id
+* DELETE /posts/:id
+
+---
+
+### 4. Likes
+
+* Like / Unlike post
+* Prevent duplicate likes
+
+Endpoints:
+
+* POST /posts/:id/like
+* DELETE /posts/:id/like
+* GET /posts/:id/likes
+
+---
+
+### 5. Comments
+
+* Add comment
+* Delete comment
+* List comments
+
+Fields:
+
+* id
+* user_id
+* post_id
+* content
+* created_at
+
+Endpoints:
+
+* GET /posts/:id/comments
+* POST /posts/:id/comments
+* DELETE /comments/:id
+
+---
+
+### 6. Camera System
+
+Predefined camera list (admin-controlled)
+
+Fields:
+
+* id
+* name
+* icon_url
+
+Endpoints:
+
+* GET /cameras
+* GET /cameras/:id
+* POST /cameras (admin only)
+* PATCH /cameras/:id (admin only)
+* DELETE /cameras/:id (admin only)
+
+---
+
+### 7. Feed System
+
+* Personalized feed:
+
+  * Posts from followed users
+  * Sorted by latest
+* Explore (/discover):
+
+  * Random + trending posts (based on likes)
+
+Endpoints:
+
+* GET /feed
+* GET /discover
+
+---
+
+## 🗄️ Database Schema (Prisma)
+
+Create models:
+
+User
+Post
+Like (unique user_id + post_id)
+Comment
+Camera
+Follow (user_id → following_id)
+
+Include relations properly.
+
+---
+
+## 🎨 Frontend UI Requirements
+
+### Home Feed
+
+* Vertical scroll
+* Each post shows:
+
+  * image
+  * title
+  * user avatar + name
+  * like button ❤️
+  * comment button 💬
+* Bottom navigation:
+
+  * Home
+  * Discover
+  * Create
+
+---
+
+### Create Post Modal
+
+* Drag & drop image upload
+* Title input
+* Caption input
+* Camera dropdown
+* Submit button
+
+---
+
+### Post Detail (Modal or Page)
+
+* Full image
+* Comments sidebar (slide-in panel)
+* Add comment input
+
+---
+
+### Discover Page
+
+* Masonry grid (Pinterest style)
+* Infinite scroll
+
+---
+
+### Profile Page
+
+* User info
+* Grid of posts
+* Follow button
+
+---
+
+## ⚙️ Backend Requirements
+
+* Use Express middleware:
+
+  * authMiddleware
+  * errorHandler
+* Clean folder structure:
+
+  * controllers/
+  * routes/
+  * services/
+  * middleware/
+
+---
+
+## 🔒 Validation & Security
+
+* Validate inputs using Zod or Joi
+* Hash passwords with bcrypt
+* Rate limit auth endpoints
+
+---
+
+## 🚀 Bonus Features (if time permits)
+
+* Extract EXIF data from images
+* Dark mode toggle
+* Image lazy loading
+* Notifications (likes/comments)
+
+---
+
+## 📦 Deliverables
+
+* Working full-stack app
+* Seed script for cameras
+* README with setup instructions
+* Clean UI matching a modern minimal photography aesthetic (dark theme preferred)
+
+---
+
+## 🎯 Important
+
+* Prioritize clean UI and smooth UX
+* Avoid overengineering
+* Keep code modular and readable
+* Ensure API and UI are fully connected and functional
+
+---
+
+Generate all code, folder structure, and setup instructions.
