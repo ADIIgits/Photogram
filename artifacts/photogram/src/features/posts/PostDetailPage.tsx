@@ -1,18 +1,18 @@
 import { useState } from "react";
 import { useRoute, Link } from "wouter";
-import { 
-  useGetPost, 
-  useListComments, 
+import {
+  useGetPost,
+  useListComments,
   useCreateComment,
   useLikePost,
   useUnlikePost,
   getGetPostQueryKey,
   getListCommentsQueryKey,
   getGetFeedQueryKey,
-  getListPostsQueryKey
+  getListPostsQueryKey,
 } from "@workspace/api-client-react";
-import { Layout } from "@/components/layout";
-import { useAuth } from "@/lib/auth";
+import { Layout } from "@/components/shared/Layout";
+import { useAuth } from "@/features/auth/context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,7 @@ import { Loader2, Heart, MessageCircle, Camera as CameraIcon, Send } from "lucid
 import { formatDistanceToNow, format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 
-export default function PostDetail() {
+export default function PostDetailPage() {
   const [, params] = useRoute("/post/:id");
   const postId = params?.id ? parseInt(params.id) : 0;
   const { user } = useAuth();
@@ -28,17 +28,11 @@ export default function PostDetail() {
   const [commentText, setCommentText] = useState("");
 
   const { data: post, isLoading: isPostLoading } = useGetPost(postId, {
-    query: {
-      queryKey: getGetPostQueryKey(postId),
-      enabled: !!postId,
-    }
+    query: { queryKey: getGetPostQueryKey(postId), enabled: !!postId },
   });
 
   const { data: comments, isLoading: isCommentsLoading } = useListComments(postId, {
-    query: {
-      queryKey: getListCommentsQueryKey(postId),
-      enabled: !!postId,
-    }
+    query: { queryKey: getListCommentsQueryKey(postId), enabled: !!postId },
   });
 
   const createComment = useCreateComment();
@@ -49,10 +43,9 @@ export default function PostDetail() {
     if (!user || !post) return;
     const isLiked = post.isLiked;
 
-    queryClient.setQueryData(getGetPostQueryKey(postId), (old: any) => {
-      if (!old) return old;
-      return { ...old, isLiked: !isLiked, likesCount: old.likesCount + (isLiked ? -1 : 1) };
-    });
+    queryClient.setQueryData(getGetPostQueryKey(postId), (old: any) =>
+      old ? { ...old, isLiked: !isLiked, likesCount: old.likesCount + (isLiked ? -1 : 1) } : old,
+    );
 
     try {
       if (isLiked) {
@@ -62,7 +55,7 @@ export default function PostDetail() {
       }
       queryClient.invalidateQueries({ queryKey: getGetFeedQueryKey() });
       queryClient.invalidateQueries({ queryKey: getListPostsQueryKey() });
-    } catch (e) {
+    } catch {
       queryClient.invalidateQueries({ queryKey: getGetPostQueryKey(postId) });
     }
   };
@@ -70,12 +63,8 @@ export default function PostDetail() {
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!commentText.trim() || !user || !post) return;
-
     try {
-      await createComment.mutateAsync({
-        id: post.id,
-        data: { content: commentText },
-      });
+      await createComment.mutateAsync({ id: post.id, data: { content: commentText } });
       setCommentText("");
       queryClient.invalidateQueries({ queryKey: getListCommentsQueryKey(postId) });
       queryClient.invalidateQueries({ queryKey: getGetPostQueryKey(postId) });
@@ -110,23 +99,22 @@ export default function PostDetail() {
   return (
     <Layout>
       <div className="flex flex-col lg:flex-row min-h-screen bg-background">
-        {/* Left: Image */}
         <div className="flex-1 bg-black/95 flex items-center justify-center p-4 lg:p-8 min-h-[50vh] lg:min-h-screen sticky top-0">
-          <img 
-            src={post.imageUrl} 
+          <img
+            src={post.imageUrl}
             alt={post.title}
             className="max-w-full max-h-[85vh] lg:max-h-screen object-contain"
           />
         </div>
 
-        {/* Right: Details & Comments */}
         <div className="w-full lg:w-[400px] border-l border-border bg-card flex flex-col shrink-0">
-          {/* Header */}
           <div className="p-4 border-b border-border flex items-center gap-3">
             <Link href={`/profile/${post.user.id}`}>
               <Avatar className="w-10 h-10 ring-1 ring-border cursor-pointer">
                 <AvatarImage src={post.user.avatarUrl || ""} />
-                <AvatarFallback className="bg-muted text-xs uppercase">{post.user.name.substring(0, 2)}</AvatarFallback>
+                <AvatarFallback className="bg-muted text-xs uppercase">
+                  {post.user.name.substring(0, 2)}
+                </AvatarFallback>
               </Avatar>
             </Link>
             <div className="flex flex-col flex-1 min-w-0">
@@ -134,7 +122,7 @@ export default function PostDetail() {
                 {post.user.name}
               </Link>
               <span className="text-xs text-muted-foreground font-mono">
-                {format(new Date(post.createdAt), 'MMM d, yyyy')}
+                {format(new Date(post.createdAt), "MMM d, yyyy")}
               </span>
             </div>
             {post.camera && (
@@ -145,7 +133,6 @@ export default function PostDetail() {
             )}
           </div>
 
-          {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto p-4 space-y-6">
             <div className="space-y-2">
               <h1 className="font-serif text-xl leading-tight">{post.title}</h1>
@@ -160,7 +147,6 @@ export default function PostDetail() {
               <h3 className="font-mono text-xs uppercase tracking-widest text-muted-foreground mb-4">
                 Exhibition Notes ({post.commentsCount})
               </h3>
-              
               <div className="space-y-5">
                 {isCommentsLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin text-muted-foreground mx-auto" />
@@ -172,7 +158,9 @@ export default function PostDetail() {
                       <Link href={`/profile/${comment.user.id}`} className="shrink-0 pt-1">
                         <Avatar className="w-6 h-6">
                           <AvatarImage src={comment.user.avatarUrl || ""} />
-                          <AvatarFallback className="bg-muted text-[10px] uppercase">{comment.user.name.substring(0, 2)}</AvatarFallback>
+                          <AvatarFallback className="bg-muted text-[10px] uppercase">
+                            {comment.user.name.substring(0, 2)}
+                          </AvatarFallback>
                         </Avatar>
                       </Link>
                       <div className="flex-1 min-w-0">
@@ -193,14 +181,17 @@ export default function PostDetail() {
             </div>
           </div>
 
-          {/* Footer Actions & Input */}
           <div className="border-t border-border p-4 bg-card mt-auto shrink-0">
             <div className="flex items-center gap-4 mb-4">
-              <button 
+              <button
                 onClick={handleLike}
                 className="flex items-center gap-1.5 text-foreground/80 hover:text-foreground transition-colors group"
               >
-                <Heart className={`w-6 h-6 transition-all ${post.isLiked ? "fill-destructive text-destructive scale-110" : "group-hover:scale-110"}`} />
+                <Heart
+                  className={`w-6 h-6 transition-all ${
+                    post.isLiked ? "fill-destructive text-destructive scale-110" : "group-hover:scale-110"
+                  }`}
+                />
                 <span className="font-mono text-sm">{post.likesCount}</span>
               </button>
               <div className="flex items-center gap-1.5 text-foreground/80">
@@ -217,14 +208,18 @@ export default function PostDetail() {
                   placeholder="Leave a note..."
                   className="bg-muted/30 border-0 focus-visible:ring-1 focus-visible:ring-border rounded-none text-sm h-10"
                 />
-                <Button 
-                  type="submit" 
-                  size="icon" 
+                <Button
+                  type="submit"
+                  size="icon"
                   variant="secondary"
                   disabled={!commentText.trim() || createComment.isPending}
                   className="rounded-none h-10 w-10 shrink-0"
                 >
-                  {createComment.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  {createComment.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
                 </Button>
               </form>
             ) : (

@@ -1,59 +1,50 @@
 import { useRoute, Link } from "wouter";
-import { 
-  useGetUser, 
-  useGetUserPosts, 
-  useFollowUser, 
+import {
+  useGetUser,
+  useGetUserPosts,
+  useFollowUser,
   useUnfollowUser,
   getGetUserQueryKey,
   getGetUserPostsQueryKey,
   getGetFeedQueryKey,
-  getGetDiscoverQueryKey,
-  getListPostsQueryKey
 } from "@workspace/api-client-react";
-import { Layout } from "@/components/layout";
-import { useAuth } from "@/lib/auth";
+import { Layout } from "@/components/shared/Layout";
+import { useAuth } from "@/features/auth/context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Loader2, Heart, Grid3X3, Image as ImageIcon } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
-export default function Profile() {
+export default function ProfilePage() {
   const [, params] = useRoute("/profile/:id");
   const userId = params?.id ? parseInt(params.id) : 0;
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: profile, isLoading: isProfileLoading } = useGetUser(userId, {
-    query: {
-      queryKey: getGetUserQueryKey(userId),
-      enabled: !!userId,
-    }
+    query: { queryKey: getGetUserQueryKey(userId), enabled: !!userId },
   });
 
   const { data: postsData, isLoading: isPostsLoading } = useGetUserPosts(userId, {
-    query: {
-      queryKey: getGetUserPostsQueryKey(userId),
-      enabled: !!userId,
-    }
+    query: { queryKey: getGetUserPostsQueryKey(userId), enabled: !!userId },
   });
 
   const followMutation = useFollowUser();
   const unfollowMutation = useUnfollowUser();
-
   const isOwnProfile = currentUser?.id === userId;
 
   const handleFollowToggle = async () => {
     if (!profile) return;
-    
-    // Optimistic
-    queryClient.setQueryData(getGetUserQueryKey(userId), (old: any) => {
-      if (!old) return old;
-      return {
-        ...old,
-        isFollowing: !old.isFollowing,
-        followersCount: old.followersCount + (old.isFollowing ? -1 : 1)
-      };
-    });
+
+    queryClient.setQueryData(getGetUserQueryKey(userId), (old: any) =>
+      old
+        ? {
+            ...old,
+            isFollowing: !old.isFollowing,
+            followersCount: old.followersCount + (old.isFollowing ? -1 : 1),
+          }
+        : old,
+    );
 
     try {
       if (profile.isFollowing) {
@@ -61,9 +52,8 @@ export default function Profile() {
       } else {
         await followMutation.mutateAsync({ id: userId });
       }
-      // invalidate feeds as following status changes what we see
       queryClient.invalidateQueries({ queryKey: getGetFeedQueryKey() });
-    } catch (e) {
+    } catch {
       queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(userId) });
     }
   };
@@ -102,12 +92,12 @@ export default function Profile() {
                 {profile.name.substring(0, 2)}
               </AvatarFallback>
             </Avatar>
-            
+
             <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left w-full">
               <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6 mb-6 w-full md:w-auto">
                 <h1 className="font-serif text-3xl md:text-4xl leading-none">{profile.name}</h1>
                 {!isOwnProfile && currentUser && (
-                  <Button 
+                  <Button
                     variant={profile.isFollowing ? "outline" : "default"}
                     onClick={handleFollowToggle}
                     disabled={followMutation.isPending || unfollowMutation.isPending}
@@ -119,24 +109,20 @@ export default function Profile() {
               </div>
 
               <div className="flex items-center gap-8 mb-6 font-mono text-sm tracking-wide">
-                <div className="flex flex-col items-center md:items-start">
-                  <span className="text-foreground font-medium text-lg">{profile.postsCount}</span>
-                  <span className="text-muted-foreground uppercase text-xs">Posts</span>
-                </div>
-                <div className="flex flex-col items-center md:items-start">
-                  <span className="text-foreground font-medium text-lg">{profile.followersCount}</span>
-                  <span className="text-muted-foreground uppercase text-xs">Followers</span>
-                </div>
-                <div className="flex flex-col items-center md:items-start">
-                  <span className="text-foreground font-medium text-lg">{profile.followingCount}</span>
-                  <span className="text-muted-foreground uppercase text-xs">Following</span>
-                </div>
+                {[
+                  { label: "Posts", value: profile.postsCount },
+                  { label: "Followers", value: profile.followersCount },
+                  { label: "Following", value: profile.followingCount },
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex flex-col items-center md:items-start">
+                    <span className="text-foreground font-medium text-lg">{value}</span>
+                    <span className="text-muted-foreground uppercase text-xs">{label}</span>
+                  </div>
+                ))}
               </div>
 
               {profile.bio && (
-                <p className="text-muted-foreground max-w-lg leading-relaxed text-sm">
-                  {profile.bio}
-                </p>
+                <p className="text-muted-foreground max-w-lg leading-relaxed text-sm">{profile.bio}</p>
               )}
             </div>
           </div>
@@ -152,7 +138,7 @@ export default function Profile() {
             <div className="flex justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
             </div>
-          ) : !postsData?.posts || postsData.posts.length === 0 ? (
+          ) : !postsData?.posts?.length ? (
             <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
               <ImageIcon className="w-12 h-12 mb-4 opacity-20" />
               <p className="font-serif text-xl opacity-50">No photographs yet</p>
@@ -160,9 +146,13 @@ export default function Profile() {
           ) : (
             <div className="grid grid-cols-3 gap-1 md:gap-4">
               {postsData.posts.map((post) => (
-                <Link key={post.id} href={`/post/${post.id}`} className="aspect-square relative group overflow-hidden bg-muted/20 block">
-                  <img 
-                    src={post.imageUrl} 
+                <Link
+                  key={post.id}
+                  href={`/post/${post.id}`}
+                  className="aspect-square relative group overflow-hidden bg-muted/20 block"
+                >
+                  <img
+                    src={post.imageUrl}
                     alt={post.title}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     loading="lazy"

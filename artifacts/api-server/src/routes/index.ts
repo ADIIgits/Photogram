@@ -1,24 +1,24 @@
-import { Router, type IRouter } from "express";
+import { Router } from "express";
 import healthRouter from "./health";
-import authRouter from "./auth";
-import usersRouter from "./users";
-import postsRouter from "./posts";
-import likesRouter from "./likes";
-import commentsRouter from "./comments";
-import camerasRouter from "./cameras";
-import feedRouter from "./feed";
-import uploadRouter from "./upload";
+import authRoutes from "./auth.routes";
+import postRoutes from "./post.routes";
+import commentRoutes from "./comment.routes";
+import likeRoutes from "./like.routes";
+import userRoutes from "./user.routes";
+import cameraRoutes from "./camera.routes";
+import feedRoutes from "./feed.routes";
+import uploadRoutes from "./upload.routes";
 
-const router: IRouter = Router();
+const router = Router();
 
 router.use(healthRouter);
-router.use(authRouter);
-router.use(usersRouter);
-router.use(postsRouter);
-router.use(likesRouter);
-router.use(commentsRouter);
-router.use(camerasRouter);
-router.use(feedRouter);
-router.use(uploadRouter);
+router.use(authRoutes);
+router.use(postRoutes);
+router.use(commentRoutes);
+router.use(likeRoutes);
+router.use(userRoutes);
+router.use(cameraRoutes);
+router.use(feedRoutes);
+router.use(uploadRoutes);
 
 export default router;

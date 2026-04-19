@@ -1,18 +1,18 @@
 import { useGetFeed, getGetFeedQueryKey } from "@workspace/api-client-react";
-import { Layout } from "@/components/layout";
-import { PostCard } from "@/components/post-card";
-import { useAuth } from "@/lib/auth";
+import { Layout } from "@/components/shared/Layout";
+import { PostCard } from "./PostCard";
+import { useAuth } from "@/features/auth/context";
 import { Loader2 } from "lucide-react";
 import { Redirect } from "wouter";
 
-export default function Home() {
+export default function HomePage() {
   const { user, isLoading: authLoading } = useAuth();
-  
+
   const { data, isLoading } = useGetFeed({
     query: {
       queryKey: getGetFeedQueryKey(),
       enabled: !!user,
-    }
+    },
   });
 
   if (authLoading) {
@@ -25,9 +25,7 @@ export default function Home() {
     );
   }
 
-  if (!user) {
-    return <Redirect to="/login" />;
-  }
+  if (!user) return <Redirect to="/login" />;
 
   return (
     <Layout>
@@ -36,7 +34,7 @@ export default function Home() {
           <div className="flex justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
           </div>
-        ) : !data?.posts || data.posts.length === 0 ? (
+        ) : !data?.posts?.length ? (
           <div className="text-center py-32 border border-border/50 border-dashed m-4">
             <h2 className="font-serif text-2xl mb-2 text-foreground/80">The darkroom is empty</h2>
             <p className="text-muted-foreground mb-6">Follow some photographers to see their work.</p>

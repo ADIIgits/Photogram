@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useLogin } from "@workspace/api-client-react";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "./context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Aperture } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-export default function Login() {
+export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { login: setAuthContext } = useAuth();
@@ -18,9 +18,7 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await loginMutation.mutateAsync({
-        data: { email, password }
-      });
+      const res = await loginMutation.mutateAsync({ data: { email, password } });
       setAuthContext(res.accessToken);
       toast({ title: "Welcome back", description: "You are now in the darkroom." });
       setLocation("/");
@@ -53,40 +51,39 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
-              <div>
-                <Input
-                  type="email"
-                  placeholder="Email address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="bg-transparent border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary text-base"
-                  required
-                />
-              </div>
-              <div>
-                <Input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-transparent border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary text-base"
-                  required
-                />
-              </div>
+              <Input
+                type="email"
+                placeholder="Email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="bg-transparent border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary text-base"
+                required
+              />
+              <Input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="bg-transparent border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary text-base"
+                required
+              />
             </div>
 
-            <Button 
-              type="submit" 
-              className="w-full rounded-none tracking-widest uppercase text-xs h-12" 
+            <Button
+              type="submit"
+              className="w-full rounded-none tracking-widest uppercase text-xs h-12"
               disabled={loginMutation.isPending}
             >
-              {loginMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {loginMutation.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
               Authenticate
             </Button>
           </form>
 
           <div className="mt-8 text-center text-sm text-muted-foreground">
-            No portfolio yet? <Link href="/signup" className="text-foreground hover:underline font-medium">Apply here</Link>
+            No portfolio yet?{" "}
+            <Link href="/signup" className="text-foreground hover:underline font-medium">
+              Apply here
+            </Link>
           </div>
         </div>
       </div>

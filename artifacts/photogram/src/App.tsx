@@ -2,15 +2,15 @@ import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from "@/lib/auth";
+import { AuthProvider } from "@/features/auth/context";
 
-import NotFound from "@/pages/not-found";
-import Home from "@/pages/home";
-import Discover from "@/pages/discover";
-import Profile from "@/pages/profile";
-import PostDetail from "@/pages/post";
-import Login from "@/pages/login";
-import Signup from "@/pages/signup";
+import LoginPage from "@/features/auth/LoginPage";
+import SignupPage from "@/features/auth/SignupPage";
+import HomePage from "@/features/posts/HomePage";
+import PostDetailPage from "@/features/posts/PostDetailPage";
+import DiscoverPage from "@/features/discover/DiscoverPage";
+import ProfilePage from "@/features/profile/ProfilePage";
+import NotFoundPage from "@/pages/NotFoundPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,13 +24,13 @@ const queryClient = new QueryClient({
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/discover" component={Discover} />
-      <Route path="/profile/:id" component={Profile} />
-      <Route path="/post/:id" component={PostDetail} />
-      <Route path="/login" component={Login} />
-      <Route path="/signup" component={Signup} />
-      <Route component={NotFound} />
+      <Route path="/" component={HomePage} />
+      <Route path="/discover" component={DiscoverPage} />
+      <Route path="/profile/:id" component={ProfilePage} />
+      <Route path="/post/:id" component={PostDetailPage} />
+      <Route path="/login" component={LoginPage} />
+      <Route path="/signup" component={SignupPage} />
+      <Route component={NotFoundPage} />
     </Switch>
   );
 }
