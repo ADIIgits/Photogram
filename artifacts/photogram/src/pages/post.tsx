@@ -34,9 +34,9 @@ export default function PostDetail() {
     }
   });
 
-  const { data: commentsData, isLoading: isCommentsLoading } = useListComments({ postId }, {
+  const { data: comments, isLoading: isCommentsLoading } = useListComments(postId, {
     query: {
-      queryKey: getListCommentsQueryKey({ postId }),
+      queryKey: getListCommentsQueryKey(postId),
       enabled: !!postId,
     }
   });
@@ -73,13 +73,11 @@ export default function PostDetail() {
 
     try {
       await createComment.mutateAsync({
-        data: {
-          content: commentText,
-          postId: post.id
-        }
+        id: post.id,
+        data: { content: commentText },
       });
       setCommentText("");
-      queryClient.invalidateQueries({ queryKey: getListCommentsQueryKey({ postId }) });
+      queryClient.invalidateQueries({ queryKey: getListCommentsQueryKey(postId) });
       queryClient.invalidateQueries({ queryKey: getGetPostQueryKey(postId) });
     } catch (e) {
       console.error(e);
@@ -166,10 +164,10 @@ export default function PostDetail() {
               <div className="space-y-5">
                 {isCommentsLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin text-muted-foreground mx-auto" />
-                ) : commentsData?.comments?.length === 0 ? (
+                ) : !comments?.length ? (
                   <p className="text-xs text-muted-foreground/60 italic">Silence in the gallery.</p>
                 ) : (
-                  commentsData?.comments.map((comment) => (
+                  comments.map((comment) => (
                     <div key={comment.id} className="flex gap-3 group">
                       <Link href={`/profile/${comment.user.id}`} className="shrink-0 pt-1">
                         <Avatar className="w-6 h-6">

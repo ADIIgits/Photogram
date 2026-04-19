@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, sql, desc } from "drizzle-orm";
+import { eq, sql, desc, and } from "drizzle-orm";
 import { db, postsTable, usersTable, camerasTable, likesTable, commentsTable } from "@workspace/db";
 import {
   CreatePostBody,
@@ -38,8 +38,7 @@ export async function buildPostResponse(post: typeof postsTable.$inferSelect, cu
     const [like] = await db
       .select()
       .from(likesTable)
-      .where(eq(likesTable.postId, post.id))
-      .where(eq(likesTable.userId, currentUserId));
+      .where(and(eq(likesTable.postId, post.id), eq(likesTable.userId, currentUserId)));
     isLiked = !!like;
   }
 
