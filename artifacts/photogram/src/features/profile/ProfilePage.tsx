@@ -25,7 +25,7 @@ export default function ProfilePage() {
     query: { queryKey: getGetUserQueryKey(userId), enabled: !!userId },
   });
 
-  const { data: postsData, isLoading: isPostsLoading } = useGetUserPosts(userId, {
+  const { data: postsData, isLoading: isPostsLoading } = useGetUserPosts(userId, undefined, {
     query: { queryKey: getGetUserPostsQueryKey(userId), enabled: !!userId },
   });
 

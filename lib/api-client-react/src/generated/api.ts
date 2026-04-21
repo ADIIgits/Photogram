@@ -26,6 +26,8 @@ import type {
   ErrorResponse,
   GetDiscoverParams,
   GetFeedParams,
+  GetSuggestions200,
+  GetSuggestionsParams,
   GetUserPostsParams,
   HealthStatus,
   LikesResponse,
@@ -35,8 +37,11 @@ import type {
   Post,
   PostListResponse,
   RefreshTokenBody,
+  SaveSearch200,
+  SaveSearchBody,
   SignupBody,
   StatsSummary,
+  Suggestion,
   TokenResponse,
   UpdateCameraBody,
   UpdatePostBody,
@@ -2668,3 +2673,267 @@ export function useGetStatsSummary<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Get location-aware search suggestions
+ */
+export const getGetSuggestionsUrl = (params?: GetSuggestionsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/search/suggestions?${stringifiedParams}`
+    : `/api/search/suggestions`;
+};
+
+export const getSuggestions = async (
+  params?: GetSuggestionsParams,
+  options?: RequestInit,
+): Promise<GetSuggestions200> => {
+  return customFetch<GetSuggestions200>(getGetSuggestionsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSuggestionsQueryKey = (params?: GetSuggestionsParams) => {
+  return [`/api/search/suggestions`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetSuggestionsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSuggestions>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetSuggestionsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getSuggestions>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSuggestionsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSuggestions>>> = ({
+    signal,
+  }) => getSuggestions(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getSuggestions>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetSuggestionsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSuggestions>>
+>;
+export type GetSuggestionsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get location-aware search suggestions
+ */
+
+export function useGetSuggestions<
+  TData = Awaited<ReturnType<typeof getSuggestions>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetSuggestionsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getSuggestions>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetSuggestionsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Increment click count for a suggestion
+ */
+export const getClickSuggestionUrl = (id: string) => {
+  return `/api/search/suggestions/${id}/click`;
+};
+
+export const clickSuggestion = async (
+  id: string,
+  options?: RequestInit,
+): Promise<Suggestion> => {
+  return customFetch<Suggestion>(getClickSuggestionUrl(id), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getClickSuggestionMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof clickSuggestion>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof clickSuggestion>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["clickSuggestion"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof clickSuggestion>>,
+    { id: string }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return clickSuggestion(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ClickSuggestionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof clickSuggestion>>
+>;
+
+export type ClickSuggestionMutationError = ErrorType<void>;
+
+/**
+ * @summary Increment click count for a suggestion
+ */
+export const useClickSuggestion = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof clickSuggestion>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof clickSuggestion>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  return useMutation(getClickSuggestionMutationOptions(options));
+};
+
+/**
+ * @summary Save a new search query as a suggestion
+ */
+export const getSaveSearchUrl = () => {
+  return `/api/search`;
+};
+
+export const saveSearch = async (
+  saveSearchBody: SaveSearchBody,
+  options?: RequestInit,
+): Promise<SaveSearch200> => {
+  return customFetch<SaveSearch200>(getSaveSearchUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(saveSearchBody),
+  });
+};
+
+export const getSaveSearchMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveSearch>>,
+    TError,
+    { data: BodyType<SaveSearchBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof saveSearch>>,
+  TError,
+  { data: BodyType<SaveSearchBody> },
+  TContext
+> => {
+  const mutationKey = ["saveSearch"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof saveSearch>>,
+    { data: BodyType<SaveSearchBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return saveSearch(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SaveSearchMutationResult = NonNullable<
+  Awaited<ReturnType<typeof saveSearch>>
+>;
+export type SaveSearchMutationBody = BodyType<SaveSearchBody>;
+export type SaveSearchMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Save a new search query as a suggestion
+ */
+export const useSaveSearch = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveSearch>>,
+    TError,
+    { data: BodyType<SaveSearchBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof saveSearch>>,
+  TError,
+  { data: BodyType<SaveSearchBody> },
+  TContext
+> => {
+  return useMutation(getSaveSearchMutationOptions(options));
+};

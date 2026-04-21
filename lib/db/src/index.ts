@@ -1,8 +1,5 @@
-import { drizzle } from "drizzle-orm/node-postgres";
-import pg from "pg";
-import * as schema from "./schema";
-
-const { Pool } = pg;
+import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
@@ -10,7 +7,31 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle(pool, { schema });
+const globalForPrisma = globalThis as unknown as {
+  prisma?: PrismaClient;
+};
 
-export * from "./schema";
+function createClient(): PrismaClient {
+  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+  return new PrismaClient({
+    adapter,
+    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+  });
+}
+
+export const prisma = globalForPrisma.prisma ?? createClient();
+
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
+}
+
+export type {
+  User,
+  Camera,
+  Post,
+  Comment,
+  Like,
+  Follow,
+  Suggestion,
+  Prisma,
+} from "@prisma/client";

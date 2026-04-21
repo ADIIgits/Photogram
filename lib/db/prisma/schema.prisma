@@ -1,0 +1,113 @@
+generator client {
+  provider      = "prisma-client-js"
+  engineType    = "library"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  avatarUrl    String?  @map("avatar_url")
+  bio          String?
+  isAdmin      Boolean  @default(false) @map("is_admin")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  posts     Post[]
+  comments  Comment[]
+  likes     Like[]
+  following Follow[]  @relation("Follower")
+  followers Follow[]  @relation("Following")
+
+  @@map("users")
+}
+
+model Camera {
+  id      Int     @id @default(autoincrement())
+  name    String
+  iconUrl String? @map("icon_url")
+
+  posts Post[]
+
+  @@map("cameras")
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  title     String
+  caption   String?
+  imageUrl  String   @map("image_url")
+  userId    Int      @map("user_id")
+  cameraId  Int?     @map("camera_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  camera   Camera?   @relation(fields: [cameraId], references: [id], onDelete: SetNull)
+  likes    Like[]
+  comments Comment[]
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("posts")
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  userId    Int      @map("user_id")
+  postId    Int      @map("post_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@map("comments")
+}
+
+model Like {
+  userId    Int      @map("user_id")
+  postId    Int      @map("post_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([userId, postId])
+  @@unique([userId, postId])
+  @@index([postId])
+  @@map("likes")
+}
+
+model Follow {
+  followerId  Int      @map("follower_id")
+  followingId Int      @map("following_id")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  follower  User @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId])
+  @@unique([followerId, followingId])
+  @@map("follows")
+}
+
+model Suggestion {
+  id         String   @id @default(uuid()) @db.Uuid
+  text       String
+  lat        Float
+  lng        Float
+  clickCount Int      @default(0) @map("click_count")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([text])
+  @@index([lat, lng])
+  @@map("suggestions")
+}

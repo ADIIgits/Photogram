@@ -1,34 +1,66 @@
+import { useMemo } from "react";
+import { useSearch } from "wouter";
 import { useGetDiscover, getGetDiscoverQueryKey } from "@workspace/api-client-react";
 import { Layout } from "@/components/shared/Layout";
 import { Link } from "wouter";
 import { Loader2, Heart } from "lucide-react";
+import { SearchBar } from "@/features/search/SearchBar";
 
 export default function DiscoverPage() {
-  const { data, isLoading } = useGetDiscover({
+  const search = useSearch();
+  const query = useMemo(() => {
+    const params = new URLSearchParams(search);
+    return params.get("q")?.trim() ?? "";
+  }, [search]);
+
+  const { data, isLoading } = useGetDiscover(undefined, {
     query: { queryKey: getGetDiscoverQueryKey() },
   });
+
+  const filteredPosts = useMemo(() => {
+    if (!data?.posts) return [];
+    if (!query) return data.posts;
+    const q = query.toLowerCase();
+    return data.posts.filter(
+      (p) =>
+        p.title.toLowerCase().includes(q) ||
+        (p.caption?.toLowerCase().includes(q) ?? false) ||
+        p.user.name.toLowerCase().includes(q),
+    );
+  }, [data, query]);
 
   return (
     <Layout>
       <div className="max-w-6xl mx-auto pt-6 md:pt-12 px-4 md:px-6 pb-24">
         <header className="mb-12">
           <h1 className="font-serif text-4xl mb-3 tracking-wide">Exhibition</h1>
-          <p className="text-muted-foreground text-sm uppercase tracking-widest">
+          <p className="text-muted-foreground text-sm uppercase tracking-widest mb-6">
             Curated works from the community
           </p>
+          <SearchBar />
+          {query && (
+            <p className="mt-4 text-sm text-muted-foreground font-mono">
+              Showing results for{" "}
+              <span className="text-foreground">&ldquo;{query}&rdquo;</span>
+              {" · "}
+              <Link href="/discover" className="underline hover:text-foreground">clear</Link>
+            </p>
+          )}
         </header>
 
         {isLoading ? (
           <div className="flex justify-center py-32">
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
           </div>
-        ) : !data?.posts?.length ? (
+        ) : !filteredPosts.length ? (
           <div className="text-center py-32">
-            <p className="text-muted-foreground">Nothing to discover yet.</p>
+            <p className="text-muted-foreground">
+              {query ? "No photographs match this search." : "Nothing to discover yet."}
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-1 md:gap-4 auto-rows-[200px] md:auto-rows-[300px]">
-            {data.posts.map((post, i) => (
+            {filteredPosts.map((post, i) => (
               <Link
                 key={post.id}
                 href={`/post/${post.id}`}

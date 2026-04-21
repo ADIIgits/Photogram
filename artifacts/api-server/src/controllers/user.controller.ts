@@ -9,7 +9,7 @@ import {
   GetUserPostsQueryParams,
 } from "@workspace/api-zod";
 import * as UserService from "../services/user.service";
-import { getUserPosts } from "../services/post.service";
+import { getUserPosts as getUserPostsService } from "../services/post.service";
 
 export async function getUser(req: Request, res: Response): Promise<void> {
   const params = GetUserParams.safeParse(req.params);
@@ -51,6 +51,6 @@ export async function getUserPosts(req: Request, res: Response): Promise<void> {
   const page = query.success ? (query.data.page ?? 1) : 1;
   const limit = query.success ? (query.data.limit ?? 20) : 20;
 
-  const result = await getUserPosts(params.data.id, page, limit, req.userId);
+  const result = await getUserPostsService(params.data.id, page, limit, req.userId);
   res.json(result);
 }

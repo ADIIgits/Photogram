@@ -1,28 +1,27 @@
-import { eq, and } from "drizzle-orm";
-import { db, followsTable } from "@workspace/db";
+import { prisma } from "@workspace/db";
 
 export async function findFollow(followerId: number, followingId: number) {
-  const [row] = await db
-    .select()
-    .from(followsTable)
-    .where(and(eq(followsTable.followerId, followerId), eq(followsTable.followingId, followingId)));
-  return row ?? null;
+  return prisma.follow.findUnique({
+    where: { followerId_followingId: { followerId, followingId } },
+  });
 }
 
 export async function insertFollow(followerId: number, followingId: number): Promise<void> {
-  await db.insert(followsTable).values({ followerId, followingId }).onConflictDoNothing();
+  await prisma.follow
+    .create({ data: { followerId, followingId } })
+    .catch(() => undefined);
 }
 
 export async function deleteFollow(followerId: number, followingId: number): Promise<void> {
-  await db
-    .delete(followsTable)
-    .where(and(eq(followsTable.followerId, followerId), eq(followsTable.followingId, followingId)));
+  await prisma.follow
+    .delete({ where: { followerId_followingId: { followerId, followingId } } })
+    .catch(() => undefined);
 }
 
 export async function getFollowingIds(userId: number): Promise<number[]> {
-  const rows = await db
-    .select({ followingId: followsTable.followingId })
-    .from(followsTable)
-    .where(eq(followsTable.followerId, userId));
+  const rows = await prisma.follow.findMany({
+    where: { followerId: userId },
+    select: { followingId: true },
+  });
   return rows.map((r) => r.followingId);
 }

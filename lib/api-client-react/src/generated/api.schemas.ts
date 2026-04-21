@@ -175,6 +175,25 @@ export interface UploadImageResponse {
   url: string;
 }
 
+export interface Suggestion {
+  id: string;
+  text: string;
+  lat: number;
+  lng: number;
+  clickCount: number;
+  /** @nullable */
+  distanceKm?: number | null;
+  createdAt: string;
+}
+
+export interface SaveSearchBody {
+  text: string;
+  /** @nullable */
+  lat?: number | null;
+  /** @nullable */
+  lng?: number | null;
+}
+
 export type ListPostsParams = {
   page?: number;
   limit?: number;
@@ -193,4 +212,24 @@ export type GetDiscoverParams = {
 export type GetUserPostsParams = {
   page?: number;
   limit?: number;
+};
+
+export type GetSuggestionsParams = {
+  lat?: number;
+  lng?: number;
+  q?: string;
+  /**
+   * @minimum 1
+   * @maximum 25
+   */
+  limit?: number;
+};
+
+export type GetSuggestions200 = {
+  suggestions: Suggestion[];
+};
+
+export type SaveSearch200 = {
+  created: boolean;
+  suggestion?: Suggestion | null;
 };

@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Post } from "@workspace/api-client-react/src/generated/api.schemas";
+import type { Post } from "@workspace/api-client-react";
 import { Heart, MessageCircle, Camera as CameraIcon } from "lucide-react";
 import { useLikePost, useUnlikePost } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";

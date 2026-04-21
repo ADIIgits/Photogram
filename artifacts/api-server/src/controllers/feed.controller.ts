@@ -6,8 +6,7 @@ import {
   buildPostView,
 } from "../services/post.service";
 import { getFollowingIds } from "../models/follow.model";
-import { db, postsTable, usersTable, likesTable, commentsTable } from "@workspace/db";
-import { sql } from "drizzle-orm";
+import { prisma } from "@workspace/db";
 
 export async function getFeed(req: Request, res: Response): Promise<void> {
   const query = GetFeedQueryParams.safeParse(req.query);
@@ -28,24 +27,25 @@ export async function getDiscover(req: Request, res: Response): Promise<void> {
 }
 
 export async function getStatsSummary(_req: Request, res: Response): Promise<void> {
-  const [totalPosts] = await db.select({ count: sql<number>`count(*)::int` }).from(postsTable);
-  const [totalUsers] = await db.select({ count: sql<number>`count(*)::int` }).from(usersTable);
-  const [totalLikes] = await db.select({ count: sql<number>`count(*)::int` }).from(likesTable);
-  const [totalComments] = await db.select({ count: sql<number>`count(*)::int` }).from(commentsTable);
+  const [totalPosts, totalUsers, totalLikes, totalComments, trendingRaw] =
+    await Promise.all([
+      prisma.post.count(),
+      prisma.user.count(),
+      prisma.like.count(),
+      prisma.comment.count(),
+      prisma.post.findMany({
+        orderBy: [{ likes: { _count: "desc" } }],
+        take: 6,
+      }),
+    ]);
 
-  const trendingRaw = await db
-    .select({ post: postsTable })
-    .from(postsTable)
-    .orderBy(sql`(SELECT count(*) FROM likes WHERE likes.post_id = ${postsTable.id}) DESC`)
-    .limit(6);
-
-  const trendingPosts = await Promise.all(trendingRaw.map((p) => buildPostView(p.post)));
+  const trendingPosts = await Promise.all(trendingRaw.map((p) => buildPostView(p)));
 
   res.json({
-    totalPosts: totalPosts?.count ?? 0,
-    totalUsers: totalUsers?.count ?? 0,
-    totalLikes: totalLikes?.count ?? 0,
-    totalComments: totalComments?.count ?? 0,
+    totalPosts,
+    totalUsers,
+    totalLikes,
+    totalComments,
     trendingPosts,
   });
 }

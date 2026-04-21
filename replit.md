@@ -12,9 +12,10 @@ Photogram is a full-stack social media web app for photographers. Dark, cinemati
 - **TypeScript version**: 5.9
 - **Frontend**: React + Vite + TailwindCSS (artifacts/photogram)
 - **API framework**: Express 5 (artifacts/api-server)
-- **Database**: PostgreSQL + Drizzle ORM
+- **Database**: PostgreSQL + Prisma 7 (with `@prisma/adapter-pg` driver adapter — Prisma 7 requires it)
+- **Cache**: Optional Redis via `REDIS_URL` (silently falls back to DB if not set)
 - **Auth**: JWT (access + refresh tokens) via bcryptjs + jsonwebtoken
-- **Validation**: Zod (`zod/v4`), `drizzle-zod`
+- **Validation**: Zod (`zod/v4`)
 - **API codegen**: Orval (from OpenAPI spec)
 - **Build**: esbuild (CJS bundle)
 - **State**: TanStack React Query (generated hooks)
@@ -28,8 +29,17 @@ Photogram is a full-stack social media web app for photographers. Dark, cinemati
 - Comments
 - Camera system (admin-controlled list of camera models)
 - Personalized feed (posts from followed users)
-- Discover/Explore page (trending by likes)
+- Discover/Explore page (trending by likes) with text search
+- Search bar with autocomplete: location-aware suggestions (haversine ranking) + popular fallback, Redis-cached
 - Platform stats summary
+
+## Architecture Notes
+
+- **Server layout** (`artifacts/api-server/src/`): `models/` (Prisma queries) → `services/` (business logic) → `controllers/` (req/res) → `routes/` (Express).
+- **Client layout** (`artifacts/photogram/src/features/`): one folder per feature (`auth`, `posts`, `discover`, `profile`, `search`).
+- **DB**: Prisma schema in `lib/db/prisma/schema.prisma`. Datasource URL is loaded in `lib/db/prisma.config.ts` (Prisma 7 requires it there, not in the schema). Generator must set `engineType = "library"` for completeness, but Prisma 7 still expects a driver adapter; we instantiate `PrismaClient` with `new PrismaPg({ connectionString })`.
+- **Suggestions table** uses uuid PK (new table); all other tables preserve the original serial/autoincrement int IDs.
+- **API codegen quirk**: after running `pnpm --filter @workspace/api-spec run codegen`, rewrite `lib/api-zod/src/index.ts` to only `export * from "./generated/api";` (orval `clean: true` regenerates an export of `./generated/api.schemas` which doesn't exist for the zod target).
 
 ## Key Commands
 

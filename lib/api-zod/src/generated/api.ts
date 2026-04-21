@@ -654,3 +654,73 @@ export const GetStatsSummaryResponse = zod.object({
     }),
   ),
 });
+
+/**
+ * @summary Get location-aware search suggestions
+ */
+export const getSuggestionsQueryLimitMax = 25;
+
+export const GetSuggestionsQueryParams = zod.object({
+  lat: zod.coerce.number().optional(),
+  lng: zod.coerce.number().optional(),
+  q: zod.coerce.string().optional(),
+  limit: zod.coerce.number().min(1).max(getSuggestionsQueryLimitMax).optional(),
+});
+
+export const GetSuggestionsResponse = zod.object({
+  suggestions: zod.array(
+    zod.object({
+      id: zod.string(),
+      text: zod.string(),
+      lat: zod.number(),
+      lng: zod.number(),
+      clickCount: zod.number(),
+      distanceKm: zod.number().nullish(),
+      createdAt: zod.coerce.date(),
+    }),
+  ),
+});
+
+/**
+ * @summary Increment click count for a suggestion
+ */
+export const ClickSuggestionParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const ClickSuggestionResponse = zod.object({
+  id: zod.string(),
+  text: zod.string(),
+  lat: zod.number(),
+  lng: zod.number(),
+  clickCount: zod.number(),
+  distanceKm: zod.number().nullish(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Save a new search query as a suggestion
+ */
+export const SaveSearchBody = zod.object({
+  text: zod.string(),
+  lat: zod.number().nullish(),
+  lng: zod.number().nullish(),
+});
+
+export const SaveSearchResponse = zod.object({
+  created: zod.boolean(),
+  suggestion: zod
+    .union([
+      zod.object({
+        id: zod.string(),
+        text: zod.string(),
+        lat: zod.number(),
+        lng: zod.number(),
+        clickCount: zod.number(),
+        distanceKm: zod.number().nullish(),
+        createdAt: zod.coerce.date(),
+      }),
+      zod.null(),
+    ])
+    .optional(),
+});

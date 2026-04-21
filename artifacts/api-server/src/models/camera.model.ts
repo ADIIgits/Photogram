@@ -1,31 +1,31 @@
-import { eq } from "drizzle-orm";
-import { db, camerasTable } from "@workspace/db";
+import { prisma, type Camera } from "@workspace/db";
 
-export type CameraRow = typeof camerasTable.$inferSelect;
-export type CreateCameraData = Pick<CameraRow, "name"> & Partial<Pick<CameraRow, "brand" | "type" | "description">>;
+export type CameraRow = Camera;
+export type CreateCameraData = { name: string; iconUrl?: string | null };
 
-export async function listCameras(): Promise<CameraRow[]> {
-  return db.select().from(camerasTable).orderBy(camerasTable.name);
+export async function listCameras(): Promise<Camera[]> {
+  return prisma.camera.findMany({ orderBy: { name: "asc" } });
 }
 
-export async function findCameraById(id: number): Promise<CameraRow | null> {
-  const [camera] = await db.select().from(camerasTable).where(eq(camerasTable.id, id));
-  return camera ?? null;
+export async function findCameraById(id: number): Promise<Camera | null> {
+  return prisma.camera.findUnique({ where: { id } });
 }
 
-export async function createCamera(data: CreateCameraData): Promise<CameraRow> {
-  const [camera] = await db.insert(camerasTable).values(data).returning();
-  return camera;
+export async function createCamera(data: CreateCameraData): Promise<Camera> {
+  return prisma.camera.create({ data });
 }
 
 export async function updateCamera(
   id: number,
   data: Partial<CreateCameraData>,
-): Promise<CameraRow | null> {
-  const [camera] = await db.update(camerasTable).set(data).where(eq(camerasTable.id, id)).returning();
-  return camera ?? null;
+): Promise<Camera | null> {
+  try {
+    return await prisma.camera.update({ where: { id }, data });
+  } catch {
+    return null;
+  }
 }
 
 export async function deleteCamera(id: number): Promise<void> {
-  await db.delete(camerasTable).where(eq(camerasTable.id, id));
+  await prisma.camera.delete({ where: { id } }).catch(() => undefined);
 }

@@ -1,40 +1,30 @@
-import { eq, sql, and } from "drizzle-orm";
-import { db, likesTable, usersTable } from "@workspace/db";
+import { prisma } from "@workspace/db";
 import { toSafeUser } from "./user.model";
 
 export async function findLike(postId: number, userId: number) {
-  const [row] = await db
-    .select()
-    .from(likesTable)
-    .where(and(eq(likesTable.postId, postId), eq(likesTable.userId, userId)));
-  return row ?? null;
+  return prisma.like.findUnique({
+    where: { userId_postId: { userId, postId } },
+  });
 }
 
 export async function insertLike(postId: number, userId: number): Promise<void> {
-  await db.insert(likesTable).values({ postId, userId });
+  await prisma.like.create({ data: { postId, userId } }).catch(() => undefined);
 }
 
 export async function deleteLike(postId: number, userId: number): Promise<void> {
-  await db
-    .delete(likesTable)
-    .where(and(eq(likesTable.postId, postId), eq(likesTable.userId, userId)));
+  await prisma.like
+    .delete({ where: { userId_postId: { userId, postId } } })
+    .catch(() => undefined);
 }
 
 export async function countLikesByPost(postId: number): Promise<number> {
-  const [r] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(likesTable)
-    .where(eq(likesTable.postId, postId));
-  return r?.count ?? 0;
+  return prisma.like.count({ where: { postId } });
 }
 
 export async function getLikeUsersByPost(postId: number) {
-  const rows = await db.select().from(likesTable).where(eq(likesTable.postId, postId));
-  const users = await Promise.all(
-    rows.map(async (l) => {
-      const [user] = await db.select().from(usersTable).where(eq(usersTable.id, l.userId));
-      return user ? toSafeUser(user) : null;
-    }),
-  );
-  return users.filter(Boolean);
+  const rows = await prisma.like.findMany({
+    where: { postId },
+    include: { user: true },
+  });
+  return rows.map((r) => toSafeUser(r.user));
 }

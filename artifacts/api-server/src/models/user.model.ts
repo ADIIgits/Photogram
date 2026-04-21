@@ -1,60 +1,45 @@
-import { eq, sql } from "drizzle-orm";
-import { db, usersTable, postsTable, followsTable } from "@workspace/db";
+import { prisma, type User } from "@workspace/db";
 
-export type UserRow = typeof usersTable.$inferSelect;
-export type SafeUser = Omit<UserRow, "passwordHash">;
+export type UserRow = User;
+export type SafeUser = Omit<User, "passwordHash">;
 
-export function toSafeUser(user: UserRow): SafeUser {
+export function toSafeUser(user: User): SafeUser {
   const { passwordHash: _, ...safe } = user;
   return safe;
 }
 
-export async function findUserById(id: number): Promise<UserRow | null> {
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, id));
-  return user ?? null;
+export async function findUserById(id: number): Promise<User | null> {
+  return prisma.user.findUnique({ where: { id } });
 }
 
-export async function findUserByEmail(email: string): Promise<UserRow | null> {
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email));
-  return user ?? null;
+export async function findUserByEmail(email: string): Promise<User | null> {
+  return prisma.user.findUnique({ where: { email } });
 }
 
 export async function createUser(data: {
   name: string;
   email: string;
   passwordHash: string;
-}): Promise<UserRow> {
-  const [user] = await db.insert(usersTable).values(data).returning();
-  return user;
+}): Promise<User> {
+  return prisma.user.create({ data });
 }
 
 export async function updateUser(
   id: number,
-  data: Partial<Pick<UserRow, "name" | "bio" | "avatarUrl">>,
-): Promise<UserRow | null> {
-  const [user] = await db.update(usersTable).set(data).where(eq(usersTable.id, id)).returning();
-  return user ?? null;
+  data: Partial<Pick<User, "name" | "bio" | "avatarUrl">>,
+): Promise<User | null> {
+  try {
+    return await prisma.user.update({ where: { id }, data });
+  } catch {
+    return null;
+  }
 }
 
 export async function getUserStats(userId: number) {
-  const [postsCount] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(postsTable)
-    .where(eq(postsTable.userId, userId));
-
-  const [followersCount] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(followsTable)
-    .where(eq(followsTable.followingId, userId));
-
-  const [followingCount] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(followsTable)
-    .where(eq(followsTable.followerId, userId));
-
-  return {
-    postsCount: postsCount?.count ?? 0,
-    followersCount: followersCount?.count ?? 0,
-    followingCount: followingCount?.count ?? 0,
-  };
+  const [postsCount, followersCount, followingCount] = await Promise.all([
+    prisma.post.count({ where: { userId } }),
+    prisma.follow.count({ where: { followingId: userId } }),
+    prisma.follow.count({ where: { followerId: userId } }),
+  ]);
+  return { postsCount, followersCount, followingCount };
 }

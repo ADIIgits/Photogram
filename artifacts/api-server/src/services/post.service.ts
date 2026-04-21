@@ -15,15 +15,10 @@ import {
 import { findUserById, toSafeUser } from "../models/user.model";
 import { findCameraById } from "../models/camera.model";
 import { countLikesByPost, findLike } from "../models/like.model";
-import { db, commentsTable } from "@workspace/db";
-import { eq, sql } from "drizzle-orm";
+import { prisma } from "@workspace/db";
 
 async function countCommentsByPost(postId: number): Promise<number> {
-  const [r] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(commentsTable)
-    .where(eq(commentsTable.postId, postId));
-  return r?.count ?? 0;
+  return prisma.comment.count({ where: { postId } });
 }
 
 export async function buildPostView(post: PostRow, currentUserId?: number) {
@@ -104,7 +99,7 @@ export async function getDiscoverPosts(page: number, limit: number, currentUserI
 
 export async function addPost(
   userId: number,
-  data: { title: string; imageUrl: string; caption?: string; cameraId?: number | null },
+  data: { title: string; imageUrl: string; caption?: string | null; cameraId?: number | null },
   currentUserId?: number,
 ) {
   const post = await createPost({ ...data, userId });
@@ -114,7 +109,7 @@ export async function addPost(
 export async function editPost(
   postId: number,
   requesterId: number,
-  data: Partial<{ title: string; caption: string; imageUrl: string; cameraId: number | null }>,
+  data: Partial<{ title: string; caption: string | null; imageUrl: string; cameraId: number | null }>,
 ) {
   const post = await findPostById(postId);
   if (!post) throw Object.assign(new Error("Post not found"), { status: 404 });

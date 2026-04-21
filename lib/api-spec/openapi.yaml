@@ -864,6 +864,98 @@ paths:
               schema:
                 $ref: "#/components/schemas/StatsSummary"
 
+  /search/suggestions:
+    get:
+      operationId: getSuggestions
+      tags: [search]
+      summary: Get location-aware search suggestions
+      parameters:
+        - name: lat
+          in: query
+          required: false
+          schema:
+            type: number
+        - name: lng
+          in: query
+          required: false
+          schema:
+            type: number
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 25
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  suggestions:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Suggestion"
+                required:
+                  - suggestions
+
+  /search/suggestions/{id}/click:
+    post:
+      operationId: clickSuggestion
+      tags: [search]
+      summary: Increment click count for a suggestion
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Suggestion"
+        "404":
+          description: Suggestion not found
+
+  /search:
+    post:
+      operationId: saveSearch
+      tags: [search]
+      summary: Save a new search query as a suggestion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SaveSearchBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created:
+                    type: boolean
+                  suggestion:
+                    oneOf:
+                      - $ref: "#/components/schemas/Suggestion"
+                      - type: "null"
+                required:
+                  - created
+
 components:
   schemas:
     HealthStatus:
@@ -1225,3 +1317,41 @@ components:
           type: string
       required:
         - url
+
+    Suggestion:
+      type: object
+      properties:
+        id:
+          type: string
+        text:
+          type: string
+        lat:
+          type: number
+        lng:
+          type: number
+        clickCount:
+          type: integer
+        distanceKm:
+          type: ["number", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - text
+        - lat
+        - lng
+        - clickCount
+        - createdAt
+
+    SaveSearchBody:
+      type: object
+      properties:
+        text:
+          type: string
+        lat:
+          type: ["number", "null"]
+        lng:
+          type: ["number", "null"]
+      required:
+        - text

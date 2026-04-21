@@ -11,7 +11,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const handleLogout = async () => {
     try {
-      await logoutMutation.mutateAsync({});
+      await logoutMutation.mutateAsync();
       authLogout();
     } catch {
       authLogout();

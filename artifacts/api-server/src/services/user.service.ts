@@ -21,7 +21,7 @@ export async function getUser(userId: number, currentUserId?: number) {
 export async function editUser(
   userId: number,
   requesterId: number,
-  data: Partial<{ name: string; bio: string; avatarUrl: string }>,
+  data: Partial<{ name: string; bio: string | null; avatarUrl: string | null }>,
 ) {
   if (userId !== requesterId) throw Object.assign(new Error("Forbidden"), { status: 403 });
   const updated = await updateUser(userId, data);

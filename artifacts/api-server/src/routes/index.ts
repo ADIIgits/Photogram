@@ -8,6 +8,7 @@ import userRoutes from "./user.routes";
 import cameraRoutes from "./camera.routes";
 import feedRoutes from "./feed.routes";
 import uploadRoutes from "./upload.routes";
+import searchRoutes from "./search.routes";
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use(userRoutes);
 router.use(cameraRoutes);
 router.use(feedRoutes);
 router.use(uploadRoutes);
+router.use(searchRoutes);
 
 export default router;

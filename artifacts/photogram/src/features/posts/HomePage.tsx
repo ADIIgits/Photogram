@@ -8,7 +8,7 @@ import { Redirect } from "wouter";
 export default function HomePage() {
   const { user, isLoading: authLoading } = useAuth();
 
-  const { data, isLoading } = useGetFeed({
+  const { data, isLoading } = useGetFeed(undefined, {
     query: {
       queryKey: getGetFeedQueryKey(),
       enabled: !!user,
