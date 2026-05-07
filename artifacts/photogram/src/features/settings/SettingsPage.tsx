@@ -8,8 +8,9 @@ import {
   getGetUserQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Camera, Loader2, CheckCircle } from "lucide-react";
+import { Camera, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { useLocation } from "wouter";
+import { motion, AnimatePresence } from "framer-motion";
 
 type Status = "idle" | "saving" | "success" | "error";
 
@@ -17,7 +18,6 @@ export default function SettingsPage() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
-
   const updateUser = useUpdateUser();
   const uploadImage = useUploadImage();
 
@@ -27,7 +27,6 @@ export default function SettingsPage() {
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState("");
-
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -47,9 +46,7 @@ export default function SettingsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => {
-      setAvatarPreview(ev.target?.result as string);
-    };
+    reader.onload = (ev) => setAvatarPreview(ev.target?.result as string);
     reader.readAsDataURL(file);
     setPendingFile(file);
   };
@@ -58,16 +55,13 @@ export default function SettingsPage() {
     e.preventDefault();
     setStatus("saving");
     setErrorMsg("");
-
     try {
       let avatarUrl: string | undefined;
-
       if (pendingFile) {
         const dataUrl = await fileToDataUrl(pendingFile);
         const res = await uploadImage.mutateAsync({ data: { dataUrl } });
         avatarUrl = res.url;
       }
-
       const updated = await updateUser.mutateAsync({
         id: user.id,
         data: {
@@ -76,66 +70,53 @@ export default function SettingsPage() {
           ...(avatarUrl ? { avatarUrl } : {}),
         },
       });
-
       queryClient.setQueryData(getGetMeQueryKey(), updated);
       queryClient.setQueryData(getGetUserQueryKey(user.id), updated);
       queryClient.invalidateQueries({ queryKey: getGetUserQueryKey(user.id) });
-
       setPendingFile(null);
       setStatus("success");
       setTimeout(() => setStatus("idle"), 2500);
     } catch (err: unknown) {
-      const msg =
-        err instanceof Error ? err.message : "Something went wrong. Try again.";
+      const msg = err instanceof Error ? err.message : "Something went wrong. Try again.";
       setErrorMsg(msg);
       setStatus("error");
     }
   };
 
   const isBusy = status === "saving";
-  const initials = (user.name ?? "?")
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+  const initials = (user.name ?? "?").split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
 
   return (
     <Layout>
-      <div className="max-w-2xl mx-auto pt-8 md:pt-16 px-4 md:px-6 pb-24">
-        <header className="mb-10">
-          <h1 className="font-serif text-3xl mb-1 tracking-wide">Settings</h1>
-          <p className="text-muted-foreground text-sm uppercase tracking-widest">
-            Manage your profile
-          </p>
+      <div className="min-h-screen bg-[#0a0a0a]">
+        {/* Header */}
+        <header className="sticky top-0 z-30 px-4 pt-4 pb-3 bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-white/[0.06]">
+          <div className="max-w-xl mx-auto">
+            <h1 className="text-[42px] font-black leading-none tracking-tighter text-white">Settings</h1>
+            <p className="text-white/35 text-sm font-mono mt-0.5">Manage your profile</p>
+          </div>
         </header>
 
-        <form onSubmit={handleSubmit} className="space-y-10">
-          {/* Avatar */}
-          <section>
-            <h2 className="text-xs uppercase tracking-widest text-muted-foreground mb-4">
-              Profile Picture
-            </h2>
-            <div className="flex items-center gap-6">
+        <form onSubmit={handleSubmit} className="max-w-xl mx-auto px-4 pt-6 pb-28 space-y-6">
+          {/* Avatar section */}
+          <section className="bg-white/[0.04] border border-white/[0.07] rounded-3xl p-5">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/35 mb-4">Profile Picture</p>
+            <div className="flex items-center gap-5">
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="relative group w-24 h-24 rounded-full bg-muted/40 border border-border overflow-hidden shrink-0 focus:outline-none"
+                className="relative group w-20 h-20 rounded-full bg-white/[0.06] border border-white/10 overflow-hidden shrink-0 focus:outline-none"
                 aria-label="Change profile picture"
               >
                 {avatarPreview ? (
-                  <img
-                    src={avatarPreview}
-                    alt="Avatar preview"
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="flex items-center justify-center w-full h-full font-serif text-2xl text-muted-foreground">
+                  <span className="flex items-center justify-center w-full h-full font-serif text-xl text-white/40">
                     {initials}
                   </span>
                 )}
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Camera className="w-6 h-6 text-white" />
+                <div className="absolute inset-0 bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
+                  <Camera className="w-5 h-5 text-white" />
                 </div>
               </button>
               <input
@@ -145,106 +126,99 @@ export default function SettingsPage() {
                 className="sr-only"
                 onChange={handleAvatarChange}
               />
-              <div className="space-y-1">
+              <div>
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="text-sm underline text-foreground hover:text-muted-foreground transition-colors"
+                  className="text-sm font-medium text-white hover:text-white/70 transition-colors underline underline-offset-2"
                 >
                   {avatarPreview ? "Change photo" : "Upload photo"}
                 </button>
-                <p className="text-xs text-muted-foreground">
-                  JPG, PNG or WebP · Max 5 MB
-                </p>
+                <p className="text-xs text-white/30 mt-1">JPG, PNG or WebP · Max 5 MB</p>
                 {pendingFile && (
-                  <p className="text-xs text-muted-foreground font-mono truncate max-w-[200px]">
-                    {pendingFile.name}
-                  </p>
+                  <p className="text-[11px] text-white/40 font-mono mt-1 truncate max-w-[200px]">{pendingFile.name}</p>
                 )}
               </div>
             </div>
           </section>
 
-          <hr className="border-border" />
-
-          {/* Name */}
-          <section className="space-y-6">
-            <h2 className="text-xs uppercase tracking-widest text-muted-foreground">
-              Account Info
-            </h2>
+          {/* Account info section */}
+          <section className="bg-white/[0.04] border border-white/[0.07] rounded-3xl p-5 space-y-4">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/35">Account Info</p>
 
             <div className="space-y-1.5">
-              <label className="text-xs uppercase tracking-widest text-muted-foreground block">
-                Display Name
-              </label>
+              <label className="text-xs text-white/40 font-mono uppercase tracking-wider">Display Name</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 maxLength={80}
                 placeholder="Your name"
-                className="w-full bg-muted/20 border border-border focus:border-foreground/40 outline-none rounded-none px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors"
+                className="w-full h-11 px-4 bg-white/[0.05] border border-white/[0.07] rounded-2xl text-sm text-white placeholder-white/25 focus:outline-none focus:border-white/20 focus:bg-white/[0.07] transition-all"
               />
             </div>
 
-            {/* Bio */}
             <div className="space-y-1.5">
-              <label className="text-xs uppercase tracking-widest text-muted-foreground block">
-                Bio
-              </label>
+              <label className="text-xs text-white/40 font-mono uppercase tracking-wider">Bio</label>
               <textarea
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 maxLength={300}
                 rows={4}
                 placeholder="A few words about you and your photography..."
-                className="w-full bg-muted/20 border border-border focus:border-foreground/40 outline-none rounded-none px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors resize-none"
+                className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.07] rounded-2xl text-sm text-white placeholder-white/25 focus:outline-none focus:border-white/20 focus:bg-white/[0.07] transition-all resize-none leading-relaxed"
               />
-              <p className="text-right text-[11px] font-mono text-muted-foreground/60">
-                {bio.length}/300
-              </p>
+              <p className="text-right text-[10px] font-mono text-white/25">{bio.length}/300</p>
             </div>
           </section>
 
-          <hr className="border-border" />
-
           {/* Email (read-only) */}
-          <section className="space-y-4">
-            <h2 className="text-xs uppercase tracking-widest text-muted-foreground">
-              Email
-            </h2>
-            <div className="flex items-center gap-3 px-4 py-2.5 bg-muted/10 border border-border/50">
-              <span className="text-sm text-muted-foreground">{user.email}</span>
-              <span className="ml-auto text-[10px] font-mono uppercase tracking-widest text-muted-foreground/50 border border-border/40 px-1.5 py-0.5">
+          <section className="bg-white/[0.04] border border-white/[0.07] rounded-3xl p-5">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/35 mb-3">Email</p>
+            <div className="flex items-center justify-between h-11 px-4 bg-white/[0.03] border border-white/[0.05] rounded-2xl">
+              <span className="text-sm text-white/50">{user.email}</span>
+              <span className="font-mono text-[9px] uppercase tracking-widest text-white/25 border border-white/[0.08] px-2 py-0.5 rounded-full">
                 read-only
               </span>
             </div>
-            <p className="text-xs text-muted-foreground/60">
-              Email cannot be changed at this time.
-            </p>
+            <p className="text-xs text-white/25 mt-2 px-1">Email cannot be changed at this time.</p>
           </section>
 
           {/* Submit */}
-          <div className="flex items-center gap-4 pt-2">
+          <div className="flex items-center gap-4 pt-1">
             <button
               type="submit"
               disabled={isBusy}
-              className="inline-flex items-center gap-2 bg-foreground text-background px-6 py-2.5 text-sm font-medium tracking-widest uppercase hover:bg-foreground/90 disabled:opacity-50 transition-colors"
+              className="flex items-center gap-2 h-12 px-8 bg-white text-black rounded-full font-semibold text-sm tracking-wide hover:bg-white/90 active:scale-[0.98] transition-all disabled:opacity-50"
             >
               {isBusy && <Loader2 className="w-4 h-4 animate-spin" />}
               {isBusy ? "Saving…" : "Save Changes"}
             </button>
 
-            {status === "success" && (
-              <span className="flex items-center gap-1.5 text-sm text-emerald-500">
-                <CheckCircle className="w-4 h-4" />
-                Saved
-              </span>
-            )}
-
-            {status === "error" && (
-              <span className="text-sm text-destructive">{errorMsg}</span>
-            )}
+            <AnimatePresence>
+              {status === "success" && (
+                <motion.span
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="flex items-center gap-1.5 text-sm text-emerald-400"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  Saved
+                </motion.span>
+              )}
+              {status === "error" && (
+                <motion.span
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="flex items-center gap-1.5 text-sm text-red-400"
+                >
+                  <AlertCircle className="w-4 h-4" />
+                  {errorMsg}
+                </motion.span>
+              )}
+            </AnimatePresence>
           </div>
         </form>
       </div>

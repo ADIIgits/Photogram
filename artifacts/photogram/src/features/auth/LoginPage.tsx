@@ -2,14 +2,14 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useLogin } from "@workspace/api-client-react";
 import { useAuth } from "./context";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Loader2, Aperture } from "lucide-react";
+import { Loader2, Aperture, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { motion } from "framer-motion";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const { login: setAuthContext } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -28,65 +28,92 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col md:flex-row">
-      <div className="flex-1 bg-muted/20 relative hidden md:flex items-center justify-center p-12 overflow-hidden">
-        <div className="absolute inset-0 bg-black/40 z-10" />
-        <div className="absolute inset-0 opacity-20 mix-blend-overlay bg-[url('https://images.unsplash.com/photo-1452711612711-2eb26f437021?q=80&w=2954&auto=format&fit=crop')] bg-cover bg-center" />
-        <div className="relative z-20 text-white max-w-lg">
-          <Aperture className="w-16 h-16 mb-8 text-white/80" />
-          <h1 className="font-serif text-5xl leading-tight mb-6">Light, shadow, and the moments between.</h1>
-          <p className="text-lg text-white/70 font-mono tracking-wide uppercase">Enter the darkroom.</p>
+    <div className="min-h-screen bg-[#0a0a0a] flex flex-col md:flex-row">
+      {/* Left — cinematic panel (desktop) */}
+      <div className="flex-1 relative hidden md:flex items-end justify-start p-14 overflow-hidden">
+        <img
+          src="https://images.unsplash.com/photo-1452711612711-2eb26f437021?q=80&w=2954&auto=format&fit=crop"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover scale-[1.02]"
+        />
+        <div className="absolute inset-0 bg-gradient-to-tr from-black/90 via-black/50 to-black/20" />
+        <div className="relative z-10 max-w-sm">
+          <Aperture className="w-10 h-10 mb-8 text-white/60" strokeWidth={1.25} />
+          <h1 className="font-serif text-5xl leading-[1.1] mb-5 text-white">Light, shadow, and the moments between.</h1>
+          <p className="font-mono text-xs tracking-[0.2em] uppercase text-white/40">Enter the darkroom.</p>
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col justify-center px-8 sm:px-16 lg:px-24 bg-card relative z-20">
+      {/* Right — form */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="flex-1 flex flex-col justify-center px-6 sm:px-12 lg:px-16 bg-[#0a0a0a] md:max-w-[480px]"
+      >
         <div className="w-full max-w-sm mx-auto">
-          <div className="mb-12 md:hidden">
-            <Aperture className="w-12 h-12 mb-4" />
-            <h1 className="font-serif text-3xl">Photogram</h1>
+          {/* Mobile logo */}
+          <div className="mb-14 md:hidden flex flex-col items-start pt-16">
+            <Aperture className="w-10 h-10 mb-5 text-white/60" strokeWidth={1.25} />
+            <h1 className="font-serif text-4xl text-white">Photogram</h1>
           </div>
 
-          <h2 className="font-serif text-2xl mb-2">Sign In</h2>
-          <p className="text-muted-foreground mb-8 text-sm">Welcome back to the gallery.</p>
+          <h2 className="text-[32px] font-black tracking-tight text-white mb-1">Sign In</h2>
+          <p className="text-white/40 mb-8 text-sm">Welcome back to the gallery.</p>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-4">
-              <Input
-                type="email"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="bg-transparent border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary text-base"
-                required
-              />
-              <Input
-                type="password"
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <GlassInput
+              type="email"
+              placeholder="Email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <div className="relative">
+              <GlassInput
+                type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="bg-transparent border-0 border-b border-border rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary text-base"
                 required
+                className="pr-12"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
 
-            <Button
+            <button
               type="submit"
-              className="w-full rounded-none tracking-widest uppercase text-xs h-12"
               disabled={loginMutation.isPending}
+              className="w-full h-12 bg-white text-black rounded-full font-semibold text-sm tracking-wide hover:bg-white/90 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
             >
-              {loginMutation.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-              Authenticate
-            </Button>
+              {loginMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+              {loginMutation.isPending ? "Signing in…" : "Authenticate"}
+            </button>
           </form>
 
-          <div className="mt-8 text-center text-sm text-muted-foreground">
+          <p className="mt-8 text-center text-sm text-white/35">
             No portfolio yet?{" "}
-            <Link href="/signup" className="text-foreground hover:underline font-medium">
+            <Link href="/signup" className="text-white/70 hover:text-white transition-colors font-medium">
               Apply here
             </Link>
-          </div>
+          </p>
         </div>
-      </div>
+      </motion.div>
     </div>
+  );
+}
+
+function GlassInput({ className = "", ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <input
+      {...props}
+      className={`w-full h-12 px-4 bg-white/[0.06] border border-white/[0.08] rounded-2xl text-sm text-white placeholder-white/30 focus:outline-none focus:border-white/25 focus:bg-white/[0.08] transition-all ${className}`}
+    />
   );
 }
