@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/features/auth/context";
 import { CreatePostModal } from "@/features/posts/CreatePostModal";
-import { Home, Compass, User, Aperture, LogOut } from "lucide-react";
+import { Home, Compass, User, Aperture, LogOut, Settings } from "lucide-react";
 import { useLogout } from "@workspace/api-client-react";
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -36,6 +36,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
               icon={<User className="w-5 h-5" />}
               label="Profile"
               active={location === `/profile/${user.id}`}
+            />
+          )}
+          {user && (
+            <NavLink
+              href="/settings"
+              icon={<Settings className="w-5 h-5" />}
+              label="Settings"
+              active={location === "/settings"}
             />
           )}
 
@@ -88,6 +96,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
               href={`/profile/${user.id}`}
               icon={<User className="w-6 h-6" />}
               active={location === `/profile/${user.id}`}
+            />
+            <MobileNavLink
+              href="/settings"
+              icon={<Settings className="w-6 h-6" />}
+              active={location === "/settings"}
             />
           </>
         ) : (

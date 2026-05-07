@@ -10,6 +10,7 @@ import HomePage from "@/features/posts/HomePage";
 import PostDetailPage from "@/features/posts/PostDetailPage";
 import DiscoverPage from "@/features/discover/DiscoverPage";
 import ProfilePage from "@/features/profile/ProfilePage";
+import SettingsPage from "@/features/settings/SettingsPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 
 const queryClient = new QueryClient({
@@ -28,6 +29,7 @@ function Router() {
       <Route path="/discover" component={DiscoverPage} />
       <Route path="/profile/:id" component={ProfilePage} />
       <Route path="/post/:id" component={PostDetailPage} />
+      <Route path="/settings" component={SettingsPage} />
       <Route path="/login" component={LoginPage} />
       <Route path="/signup" component={SignupPage} />
       <Route component={NotFoundPage} />
