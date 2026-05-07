@@ -1,0 +1,85 @@
+Let’s redesign the entire UI system into a cleaner, more modern, premium iOS-inspired experience.
+
+Design Direction:
+
+* Strong Apple/iOS aesthetic with cinematic minimalism.
+* Prioritize spacing, hierarchy, typography, and visual breathing room over excessive decoration.
+* The interface should feel calm, intelligent, fluid, and expensive.
+
+Visual Language:
+
+* Use soft translucency and layered depth similar to iOS glassmorphism.
+* Larger surfaces/cards/modals/panels should use elegant frosted glass materials with subtle blur and transparency.
+* Smaller UI elements (toggles, pills, badges, chips, dropdowns, tooltips, menus) should lean more toward clean Material-style usability and clarity.
+* Blend both approaches carefully — avoid overusing blur or gradients.
+
+Layout Principles:
+
+* Maintain generous whitespace.
+* Align everything precisely.
+* Use consistent spacing rhythm throughout the app.
+* Content density should feel intentional and breathable.
+* Important content should visually stand out through scale, contrast, spacing, and opacity — not loud colors.
+
+Typography:
+
+* Use clean modern typography similar to SF Pro / Inter.
+* Strong font hierarchy.
+* Large elegant headings.
+* Softer secondary text.
+* Reduce visual noise.
+
+Motion & Interactions:
+
+* Use Framer Motion extensively for premium-feeling interactions.
+* Add subtle microinteractions everywhere:
+
+  * hover states,
+  * smooth scaling,
+  * soft fades,
+  * spring transitions,
+  * glass reflections,
+  * animated focus states,
+  * page transitions,
+  * modal transitions,
+  * loading skeletons/shimmers.
+* Animations should feel responsive and alive, but never flashy or distracting.
+* Favor smooth easing and spring physics similar to native iOS motion.
+
+Components:
+
+* Rounded corners throughout the UI.
+* Floating translucent navbars/toolbars where appropriate.
+* Elegant sheets/modals inspired by iOS.
+* Soft shadows and layered depth.
+* Thin borders with low-opacity whites/grays.
+* Use subtle gradients sparingly for highlights only.
+
+Color & Atmosphere:
+
+* Dark mode first.
+* Deep blacks/charcoal backgrounds.
+* Slightly warm cinematic tones.
+* Preserve readability and contrast.
+* UI should feel immersive like Apple TV / iOS media interfaces.
+
+Inspiration References:
+
+* iOS Screen Time UI
+* Apple Photos library layout
+* Apple TV cinematic presentation
+* Modern glassmorphism dashboards
+* Minimal luxury portfolio websites
+
+Implementation:
+
+* Use Tailwind CSS.
+* Use Framer Motion for all major transitions and microinteractions.
+* Keep components modular and reusable.
+* Ensure responsiveness across desktop, tablet, and mobile.
+* Maintain excellent accessibility and usability.
+
+Important:
+Do not make the UI look like a generic SaaS dashboard.
+Avoid clutter, excessive gradients, neon colors, or over-animated elements.
+The final experience should feel refined, cinematic, tactile, and intentionally designed.
