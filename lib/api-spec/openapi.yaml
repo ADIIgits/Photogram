@@ -43,7 +43,7 @@ paths:
     post:
       operationId: signup
       tags: [auth]
-      summary: Sign up
+      summary: Sign up (legacy — kept for compatibility)
       requestBody:
         required: true
         content:
@@ -65,6 +65,86 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "409":
           description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/send-otp:
+    post:
+      operationId: sendOtp
+      tags: [auth]
+      summary: Send verification OTP to Gmail address
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendOtpBody"
+      responses:
+        "200":
+          description: OTP sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SendOtpResponse"
+        "400":
+          description: Bad request / invalid email
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Email already registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Resend cooldown active
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SendOtpCooldownResponse"
+
+  /auth/verify-otp:
+    post:
+      operationId: verifyOtp
+      tags: [auth]
+      summary: Verify OTP and create account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyOtpBody"
+      responses:
+        "201":
+          description: Account created and authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Invalid OTP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: No pending verification
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "410":
+          description: OTP expired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Too many attempts
           content:
             application/json:
               schema:
@@ -1343,6 +1423,58 @@ components:
         - lng
         - clickCount
         - createdAt
+
+    SendOtpBody:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - name
+        - email
+        - password
+
+    SendOtpResponse:
+      type: object
+      properties:
+        resendAvailableAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+      required:
+        - resendAvailableAt
+        - expiresAt
+
+    SendOtpCooldownResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        secondsLeft:
+          type: integer
+        resendAvailableAt:
+          type: string
+          format: date-time
+      required:
+        - error
+        - secondsLeft
+
+    VerifyOtpBody:
+      type: object
+      properties:
+        email:
+          type: string
+        otp:
+          type: string
+      required:
+        - email
+        - otp
 
     SaveSearchBody:
       type: object

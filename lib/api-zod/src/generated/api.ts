@@ -16,7 +16,7 @@ export const HealthCheckResponse = zod.object({
 });
 
 /**
- * @summary Sign up
+ * @summary Sign up (legacy — kept for compatibility)
  */
 export const signupBodyPasswordMin = 6;
 
@@ -24,6 +24,28 @@ export const SignupBody = zod.object({
   name: zod.string(),
   email: zod.string().email(),
   password: zod.string().min(signupBodyPasswordMin),
+});
+
+/**
+ * @summary Send verification OTP to Gmail address
+ */
+export const SendOtpBody = zod.object({
+  name: zod.string(),
+  email: zod.string(),
+  password: zod.string(),
+});
+
+export const SendOtpResponse = zod.object({
+  resendAvailableAt: zod.coerce.date(),
+  expiresAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Verify OTP and create account
+ */
+export const VerifyOtpBody = zod.object({
+  email: zod.string(),
+  otp: zod.string(),
 });
 
 /**

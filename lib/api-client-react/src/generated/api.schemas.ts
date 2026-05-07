@@ -186,6 +186,28 @@ export interface Suggestion {
   createdAt: string;
 }
 
+export interface SendOtpBody {
+  name: string;
+  email: string;
+  password: string;
+}
+
+export interface SendOtpResponse {
+  resendAvailableAt: string;
+  expiresAt: string;
+}
+
+export interface SendOtpCooldownResponse {
+  error: string;
+  secondsLeft: number;
+  resendAvailableAt?: string;
+}
+
+export interface VerifyOtpBody {
+  email: string;
+  otp: string;
+}
+
 export interface SaveSearchBody {
   text: string;
   /** @nullable */

@@ -99,6 +99,21 @@ model Follow {
   @@map("follows")
 }
 
+model PendingVerification {
+  id           String    @id @default(uuid()) @db.Uuid
+  email        String    @unique
+  name         String
+  passwordHash String    @map("password_hash")
+  otpHash      String    @map("otp_hash")
+  expiresAt    DateTime  @map("expires_at") @db.Timestamptz(6)
+  attempts     Int       @default(0)
+  resendAt     DateTime? @map("resend_at") @db.Timestamptz(6)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([email])
+  @@map("pending_verifications")
+}
+
 model Suggestion {
   id         String   @id @default(uuid()) @db.Uuid
   text       String
