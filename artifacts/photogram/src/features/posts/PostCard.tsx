@@ -12,9 +12,18 @@ import {
 } from "@workspace/api-client-react";
 import { useAuth } from "@/features/auth/context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { formatDistanceToNow } from "date-fns";
+import { motion } from "framer-motion";
 
-export function PostCard({ post }: { post: Post }) {
+const cardVariants = {
+  hidden: { opacity: 0, y: 16 },
+  show: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring" as const, stiffness: 260, damping: 22, delay: i * 0.055 },
+  }),
+};
+
+export function PostCard({ post, index = 0 }: { post: Post; index?: number }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const likeMutation = useLikePost();
@@ -57,74 +66,63 @@ export function PostCard({ post }: { post: Post }) {
   };
 
   return (
-    <article className="mb-16 border-b border-border/50 pb-12 group last:border-0">
-      <header className="flex items-center gap-3 mb-4 px-2 md:px-0">
-        <Link href={`/profile/${post.user.id}`}>
-          <Avatar className="w-8 h-8 cursor-pointer ring-1 ring-border">
-            <AvatarImage src={post.user.avatarUrl || ""} />
-            <AvatarFallback className="bg-muted text-xs uppercase">
-              {post.user.name.substring(0, 2)}
-            </AvatarFallback>
-          </Avatar>
-        </Link>
-        <div className="flex flex-col">
-          <Link href={`/profile/${post.user.id}`} className="font-medium text-sm hover:underline cursor-pointer">
-            {post.user.name}
-          </Link>
-          <span className="text-xs text-muted-foreground">
-            {formatDistanceToNow(new Date(post.createdAt))} ago
-          </span>
-        </div>
-      </header>
-
-      <Link href={`/post/${post.id}`} className="block relative overflow-hidden bg-muted/20">
-        <div className="w-full aspect-[4/5] md:aspect-auto md:max-h-[80vh] flex items-center justify-center">
+    <motion.article
+      custom={index}
+      variants={cardVariants}
+      initial="hidden"
+      animate="show"
+      className="relative group rounded-2xl overflow-hidden bg-white/[0.04] cursor-pointer"
+    >
+      <Link href={`/post/${post.id}`} className="block">
+        <div className="w-full aspect-[4/5] overflow-hidden">
           <img
             src={post.imageUrl}
             alt={post.title}
-            className="w-full h-full object-contain md:object-cover md:h-auto max-h-[80vh] transition-transform duration-700 ease-out group-hover:scale-[1.02]"
+            className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
             loading="lazy"
           />
         </div>
-      </Link>
 
-      <div className="mt-4 px-2 md:px-0">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={handleLike}
-              className="flex items-center gap-1.5 text-foreground/80 hover:text-foreground transition-colors group/btn"
-            >
-              <Heart
-                className={`w-6 h-6 transition-all ${
-                  isLiked ? "fill-destructive text-destructive" : "group-hover/btn:scale-110"
-                }`}
-              />
-              <span className="text-sm font-medium">{post.likesCount}</span>
-            </button>
-            <Link
-              href={`/post/${post.id}`}
-              className="flex items-center gap-1.5 text-foreground/80 hover:text-foreground transition-colors group/btn"
-            >
-              <MessageCircle className="w-6 h-6 group-hover/btn:scale-110 transition-transform" />
-              <span className="text-sm font-medium">{post.commentsCount}</span>
-            </Link>
-          </div>
-          {post.camera && (
-            <div className="flex items-center gap-1.5 text-muted-foreground text-xs font-mono uppercase tracking-wider">
-              <CameraIcon className="w-3.5 h-3.5" />
-              <span>{post.camera.name}</span>
+        {/* Permanent soft gradient at bottom */}
+        <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
+
+        {/* Bottom info — always visible */}
+        <div className="absolute inset-x-0 bottom-0 p-3">
+          <h2 className="font-serif text-sm leading-snug text-white/90 mb-2 line-clamp-1">{post.title}</h2>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <Avatar className="w-5 h-5 ring-1 ring-white/20">
+                <AvatarImage src={post.user.avatarUrl || ""} />
+                <AvatarFallback className="bg-white/10 text-[9px] uppercase">{post.user.name.substring(0, 2)}</AvatarFallback>
+              </Avatar>
+              <span className="text-[11px] text-white/70 font-medium truncate max-w-[80px]">{post.user.name}</span>
             </div>
-          )}
+            <div className="flex items-center gap-3">
+              {post.camera && (
+                <div className="hidden group-hover:flex items-center gap-1 text-white/50">
+                  <CameraIcon className="w-2.5 h-2.5" />
+                  <span className="font-mono text-[9px] uppercase tracking-wide">{post.camera.name}</span>
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleLike}
+                  className="flex items-center gap-1 active:scale-90 transition-transform"
+                >
+                  <motion.div animate={{ scale: isLiked ? [1, 1.3, 1] : 1 }} transition={{ duration: 0.25 }}>
+                    <Heart className={`w-3.5 h-3.5 ${isLiked ? "fill-red-500 text-red-500" : "text-white/70 fill-white/10"}`} strokeWidth={1.5} />
+                  </motion.div>
+                  <span className="font-mono text-[10px] text-white/60">{post.likesCount}</span>
+                </button>
+                <div className="flex items-center gap-1">
+                  <MessageCircle className="w-3.5 h-3.5 text-white/50" strokeWidth={1.5} />
+                  <span className="font-mono text-[10px] text-white/50">{post.commentsCount}</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-
-        <div className="space-y-1">
-          <h2 className="font-serif text-lg leading-tight text-foreground/90">{post.title}</h2>
-          {post.caption && (
-            <p className="text-sm text-muted-foreground line-clamp-2">{post.caption}</p>
-          )}
-        </div>
-      </div>
-    </article>
+      </Link>
+    </motion.article>
   );
 }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useRoute, Link } from "wouter";
+import { useRoute, Link, useLocation } from "wouter";
 import {
   useGetPost,
   useListComments,
@@ -10,15 +10,14 @@ import {
   getListCommentsQueryKey,
   getGetFeedQueryKey,
   getListPostsQueryKey,
+  getGetDiscoverQueryKey,
 } from "@workspace/api-client-react";
-import { Layout } from "@/components/shared/Layout";
 import { useAuth } from "@/features/auth/context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Loader2, Heart, MessageCircle, Camera as CameraIcon, Send } from "lucide-react";
+import { Loader2, Heart, MessageCircle, Camera as CameraIcon, Send, ChevronLeft, Share2 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function PostDetailPage() {
   const [, params] = useRoute("/post/:id");
@@ -26,6 +25,7 @@ export default function PostDetailPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [commentText, setCommentText] = useState("");
+  const [, navigate] = useLocation();
 
   const { data: post, isLoading: isPostLoading } = useGetPost(postId, {
     query: { queryKey: getGetPostQueryKey(postId), enabled: !!postId },
@@ -55,6 +55,7 @@ export default function PostDetailPage() {
       }
       queryClient.invalidateQueries({ queryKey: getGetFeedQueryKey() });
       queryClient.invalidateQueries({ queryKey: getListPostsQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getGetDiscoverQueryKey() });
     } catch {
       queryClient.invalidateQueries({ queryKey: getGetPostQueryKey(postId) });
     }
@@ -69,167 +70,207 @@ export default function PostDetailPage() {
       queryClient.invalidateQueries({ queryKey: getListCommentsQueryKey(postId) });
       queryClient.invalidateQueries({ queryKey: getGetPostQueryKey(postId) });
     } catch (e) {
-      console.error(e);
+      // ignore
     }
   };
 
   if (isPostLoading) {
     return (
-      <Layout>
-        <div className="flex h-screen items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-        </div>
-      </Layout>
+      <div className="flex h-screen items-center justify-center bg-[#0a0a0a]">
+        <Loader2 className="w-6 h-6 animate-spin text-white/20" />
+      </div>
     );
   }
 
   if (!post) {
     return (
-      <Layout>
-        <div className="flex h-screen items-center justify-center">
-          <div className="text-center">
-            <h1 className="font-serif text-2xl mb-2">Photograph not found</h1>
-            <Link href="/" className="text-muted-foreground hover:text-foreground">Return to gallery</Link>
-          </div>
+      <div className="flex h-screen items-center justify-center bg-[#0a0a0a]">
+        <div className="text-center">
+          <h1 className="font-serif text-2xl mb-3 text-white">Photograph not found</h1>
+          <Link href="/" className="text-white/40 hover:text-white text-sm transition-colors">Return to gallery</Link>
         </div>
-      </Layout>
+      </div>
     );
   }
 
   return (
-    <Layout>
-      <div className="flex flex-col lg:flex-row min-h-screen bg-background">
-        <div className="flex-1 bg-black/95 flex items-center justify-center p-4 lg:p-8 min-h-[50vh] lg:min-h-screen sticky top-0">
-          <img
-            src={post.imageUrl}
-            alt={post.title}
-            className="max-w-full max-h-[85vh] lg:max-h-screen object-contain"
-          />
+    <div className="min-h-screen bg-[#0a0a0a] text-[#fafafa] flex flex-col md:flex-row">
+      {/* Photo side */}
+      <div className="relative md:flex-1 md:h-screen md:sticky md:top-0 bg-black overflow-hidden">
+        <motion.img
+          initial={{ scale: 1.04, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          src={post.imageUrl}
+          alt={post.title}
+          className="w-full h-full object-cover"
+          style={{ maxHeight: "55vh", minHeight: "280px" }}
+        />
+
+        {/* Gradient fade at bottom */}
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/60 to-transparent pointer-events-none md:hidden" />
+
+        {/* Floating nav buttons */}
+        <div className="absolute top-12 inset-x-4 flex justify-between items-center z-10">
+          <button
+            onClick={() => navigate("~/")}
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-black/30 backdrop-blur-xl border border-white/10 text-white transition-all active:scale-90 hover:bg-black/50"
+          >
+            <ChevronLeft size={20} strokeWidth={2} />
+          </button>
+          <button
+            onClick={() => navigator.share?.({ title: post.title, url: window.location.href })}
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-black/30 backdrop-blur-xl border border-white/10 text-white transition-all active:scale-90 hover:bg-black/50"
+          >
+            <Share2 size={16} strokeWidth={1.75} />
+          </button>
         </div>
 
-        <div className="w-full lg:w-[400px] border-l border-border bg-card flex flex-col shrink-0">
-          <div className="p-4 border-b border-border flex items-center gap-3">
-            <Link href={`/profile/${post.user.id}`}>
-              <Avatar className="w-10 h-10 ring-1 ring-border cursor-pointer">
-                <AvatarImage src={post.user.avatarUrl || ""} />
-                <AvatarFallback className="bg-muted text-xs uppercase">
-                  {post.user.name.substring(0, 2)}
-                </AvatarFallback>
-              </Avatar>
-            </Link>
-            <div className="flex flex-col flex-1 min-w-0">
-              <Link href={`/profile/${post.user.id}`} className="font-medium hover:underline truncate">
-                {post.user.name}
-              </Link>
-              <span className="text-xs text-muted-foreground font-mono">
-                {format(new Date(post.createdAt), "MMM d, yyyy")}
-              </span>
-            </div>
-            {post.camera && (
-              <div className="flex items-center gap-1.5 text-muted-foreground text-[10px] font-mono uppercase tracking-widest shrink-0 ml-2">
-                <CameraIcon className="w-3 h-3" />
-                <span className="hidden sm:inline">{post.camera.name}</span>
-              </div>
-            )}
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-4 space-y-6">
-            <div className="space-y-2">
-              <h1 className="font-serif text-xl leading-tight">{post.title}</h1>
-              {post.caption && (
-                <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">
-                  {post.caption}
-                </p>
-              )}
-            </div>
-
-            <div className="border-t border-border pt-6">
-              <h3 className="font-mono text-xs uppercase tracking-widest text-muted-foreground mb-4">
-                Exhibition Notes ({post.commentsCount})
-              </h3>
-              <div className="space-y-5">
-                {isCommentsLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-muted-foreground mx-auto" />
-                ) : !comments?.length ? (
-                  <p className="text-xs text-muted-foreground/60 italic">Silence in the gallery.</p>
-                ) : (
-                  comments.map((comment) => (
-                    <div key={comment.id} className="flex gap-3 group">
-                      <Link href={`/profile/${comment.user.id}`} className="shrink-0 pt-1">
-                        <Avatar className="w-6 h-6">
-                          <AvatarImage src={comment.user.avatarUrl || ""} />
-                          <AvatarFallback className="bg-muted text-[10px] uppercase">
-                            {comment.user.name.substring(0, 2)}
-                          </AvatarFallback>
-                        </Avatar>
-                      </Link>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-baseline gap-2 mb-0.5">
-                          <Link href={`/profile/${comment.user.id}`} className="font-medium text-sm hover:underline">
-                            {comment.user.name}
-                          </Link>
-                          <span className="text-[10px] text-muted-foreground font-mono">
-                            {formatDistanceToNow(new Date(comment.createdAt))} ago
-                          </span>
-                        </div>
-                        <p className="text-sm text-foreground/90 break-words">{comment.content}</p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-border p-4 bg-card mt-auto shrink-0">
-            <div className="flex items-center gap-4 mb-4">
-              <button
-                onClick={handleLike}
-                className="flex items-center gap-1.5 text-foreground/80 hover:text-foreground transition-colors group"
-              >
-                <Heart
-                  className={`w-6 h-6 transition-all ${
-                    post.isLiked ? "fill-destructive text-destructive scale-110" : "group-hover:scale-110"
-                  }`}
-                />
-                <span className="font-mono text-sm">{post.likesCount}</span>
-              </button>
-              <div className="flex items-center gap-1.5 text-foreground/80">
-                <MessageCircle className="w-6 h-6" />
-                <span className="font-mono text-sm">{post.commentsCount}</span>
-              </div>
-            </div>
-
-            {user ? (
-              <form onSubmit={handleCommentSubmit} className="flex gap-2">
-                <Input
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  placeholder="Leave a note..."
-                  className="bg-muted/30 border-0 focus-visible:ring-1 focus-visible:ring-border rounded-none text-sm h-10"
-                />
-                <Button
-                  type="submit"
-                  size="icon"
-                  variant="secondary"
-                  disabled={!commentText.trim() || createComment.isPending}
-                  className="rounded-none h-10 w-10 shrink-0"
-                >
-                  {createComment.isPending ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Send className="w-4 h-4" />
-                  )}
-                </Button>
-              </form>
-            ) : (
-              <p className="text-xs text-muted-foreground text-center py-2 bg-muted/20">
-                <Link href="/login" className="underline hover:text-foreground">Sign in</Link> to interact.
-              </p>
-            )}
-          </div>
-        </div>
+        {/* Desktop hidden gradient */}
+        <div className="hidden md:block absolute inset-y-0 right-0 w-16 bg-gradient-to-r from-transparent to-[#0a0a0a] pointer-events-none" />
       </div>
-    </Layout>
+
+      {/* Content side */}
+      <motion.div
+        initial={{ y: 32, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.25, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="relative md:w-[420px] md:h-screen md:overflow-y-auto flex flex-col -mt-12 md:mt-0 z-10 pb-28 md:pb-8 no-scrollbar"
+      >
+        <div className="px-5 pt-6 space-y-5">
+          {/* Author row */}
+          <div className="flex items-center justify-between">
+            <Link href={`/profile/${post.user.id}`} className="flex items-center gap-3">
+              <Avatar className="w-10 h-10 ring-2 ring-white/10">
+                <AvatarImage src={post.user.avatarUrl || ""} />
+                <AvatarFallback className="bg-white/8 text-xs uppercase">{post.user.name.substring(0, 2)}</AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-sm font-medium text-white leading-tight">{post.user.name}</p>
+                <p className="text-xs text-white/40 font-mono">{format(new Date(post.createdAt), "MMM d, yyyy")}</p>
+              </div>
+            </Link>
+          </div>
+
+          {/* Camera badge + title + caption */}
+          <div className="space-y-2.5">
+            {post.camera && (
+              <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 border border-white/[0.06]">
+                <CameraIcon className="w-3 h-3 text-white/50" />
+                <span className="font-mono text-[10px] tracking-wider text-white/60 uppercase">{post.camera.name}</span>
+              </div>
+            )}
+            <h1 className="font-serif text-2xl font-medium leading-tight text-white">{post.title}</h1>
+            {post.caption && (
+              <p className="text-sm text-white/55 leading-relaxed">{post.caption}</p>
+            )}
+          </div>
+
+          {/* Action row */}
+          <div className="flex items-center gap-5 pt-1">
+            <button
+              onClick={handleLike}
+              className="flex items-center gap-2 active:scale-90 transition-transform"
+            >
+              <motion.div animate={{ scale: post.isLiked ? [1, 1.25, 1] : 1 }} transition={{ duration: 0.3 }}>
+                <Heart
+                  size={22}
+                  className={post.isLiked ? "fill-red-500 text-red-500" : "text-white/70"}
+                  strokeWidth={1.5}
+                />
+              </motion.div>
+              <span className="font-mono text-xs text-white/50">{post.likesCount}</span>
+            </button>
+            <div className="flex items-center gap-2">
+              <MessageCircle size={22} className="text-white/70" strokeWidth={1.5} />
+              <span className="font-mono text-xs text-white/50">{post.commentsCount}</span>
+            </div>
+          </div>
+
+          <div className="h-px bg-white/[0.06] w-full" />
+
+          {/* Comments */}
+          <div className="space-y-4 pb-4">
+            <h3 className="font-mono text-[10px] tracking-widest text-white/30 uppercase">
+              {post.commentsCount === 1 ? "1 Comment" : `${post.commentsCount} Comments`}
+            </h3>
+
+            {isCommentsLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin text-white/20 mx-auto" />
+            ) : !comments?.length ? (
+              <p className="text-xs text-white/25 italic">Silence in the gallery.</p>
+            ) : (
+              <AnimatePresence>
+                {comments.map((comment, i) => (
+                  <motion.div
+                    key={comment.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 + i * 0.06 }}
+                    className="flex gap-3"
+                  >
+                    <Link href={`/profile/${comment.user.id}`} className="shrink-0">
+                      <Avatar className="w-8 h-8 mt-0.5">
+                        <AvatarImage src={comment.user.avatarUrl || ""} />
+                        <AvatarFallback className="bg-white/8 text-[10px] uppercase">{comment.user.name.substring(0, 2)}</AvatarFallback>
+                      </Avatar>
+                    </Link>
+                    <div className="flex-1 space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <Link href={`/profile/${comment.user.id}`} className="text-sm font-medium text-white hover:text-white/80 transition-colors">
+                          {comment.user.name}
+                        </Link>
+                        <span className="text-[10px] text-white/30 font-mono">
+                          {formatDistanceToNow(new Date(comment.createdAt))} ago
+                        </span>
+                      </div>
+                      <p className="text-sm text-white/70 leading-snug">{comment.content}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            )}
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Floating comment input */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 md:absolute md:bottom-0 md:left-auto md:w-[420px] md:right-0 p-4 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/95 to-transparent pt-10">
+        {user ? (
+          <form onSubmit={handleCommentSubmit}>
+            <div className="flex items-center gap-3 px-4 py-3 bg-white/8 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl">
+              <Avatar className="w-6 h-6 shrink-0">
+                <AvatarImage src={user.avatarUrl || ""} />
+                <AvatarFallback className="bg-white/10 text-[9px] uppercase">{user.name.substring(0, 2)}</AvatarFallback>
+              </Avatar>
+              <input
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder="Add a comment..."
+                className="flex-1 bg-transparent text-sm text-white placeholder-white/30 focus:outline-none"
+              />
+              <button
+                type="submit"
+                disabled={!commentText.trim() || createComment.isPending}
+                className="text-white/40 hover:text-white transition-colors disabled:opacity-30 active:scale-90"
+              >
+                {createComment.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send size={16} strokeWidth={1.75} />
+                )}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div className="flex items-center justify-center gap-3 px-4 py-3 bg-white/8 rounded-2xl border border-white/10">
+            <p className="text-xs text-white/40">
+              <Link href="/login" className="text-white/70 underline hover:text-white transition-colors">Sign in</Link>
+              {" "}to leave a comment
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
