@@ -114,7 +114,7 @@ export function CreatePostModal({ children }: { children: React.ReactNode }) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20, scale: 0.97 }}
               transition={{ type: "spring", stiffness: 300, damping: 28 }}
-              className="fixed inset-x-3 bottom-3 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-md z-50 bg-[#111] border border-white/[0.08] rounded-[28px] overflow-hidden shadow-2xl shadow-black/60"
+              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-24px)] max-w-md z-50 bg-[#111] border border-white/[0.08] rounded-[28px] overflow-hidden shadow-2xl shadow-black/60"
             >
               {/* Header */}
               <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-white/[0.06]">
