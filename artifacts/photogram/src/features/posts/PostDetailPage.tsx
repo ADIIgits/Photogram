@@ -14,7 +14,7 @@ import {
 } from "@workspace/api-client-react";
 import { useAuth } from "@/features/auth/context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, Heart, MessageCircle, Camera as CameraIcon, Send, ChevronLeft, Share2 } from "lucide-react";
+import { Loader2, Heart, MessageCircle, Camera as CameraIcon, Send, ChevronLeft, Share2, Expand, X } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -25,6 +25,7 @@ export default function PostDetailPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [commentText, setCommentText] = useState("");
+  const [fullscreen, setFullscreen] = useState(false);
   const [, navigate] = useLocation();
 
   const { data: post, isLoading: isPostLoading } = useGetPost(postId, {
@@ -93,17 +94,48 @@ export default function PostDetailPage() {
     );
   }
 
+  const btnCls = "flex items-center justify-center w-10 h-10 rounded-full bg-black/30 backdrop-blur-xl border border-white/10 text-white transition-all active:scale-90 hover:bg-black/50";
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#fafafa] flex flex-col md:flex-row md:h-screen md:overflow-hidden">
+
+      {/* ── Fullscreen overlay ── */}
+      <AnimatePresence>
+        {fullscreen && (
+          <motion.div
+            key="fullscreen"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-[100] bg-black flex items-center justify-center"
+            onClick={() => setFullscreen(false)}
+          >
+            <img
+              src={post.imageUrl}
+              alt={post.title}
+              className="max-w-full max-h-full object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button
+              onClick={() => setFullscreen(false)}
+              className={`${btnCls} absolute top-10 right-4`}
+            >
+              <X size={18} strokeWidth={2} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ── Photo side ── */}
       <div className="relative h-[58vw] max-h-[55vh] md:h-screen md:max-h-none md:flex-1 md:sticky md:top-0 bg-black overflow-hidden shrink-0">
         <motion.img
-          initial={{ scale: 1.04, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           src={post.imageUrl}
           alt={post.title}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
         />
 
         {/* Mobile: gradient fade into content below */}
@@ -111,18 +143,20 @@ export default function PostDetailPage() {
 
         {/* Floating nav buttons */}
         <div className="absolute top-10 inset-x-4 flex justify-between items-center z-10">
-          <button
-            onClick={() => navigate("~/")}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-black/30 backdrop-blur-xl border border-white/10 text-white transition-all active:scale-90 hover:bg-black/50"
-          >
+          <button onClick={() => navigate("~/")} className={btnCls}>
             <ChevronLeft size={20} strokeWidth={2} />
           </button>
-          <button
-            onClick={() => navigator.share?.({ title: post.title, url: window.location.href })}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-black/30 backdrop-blur-xl border border-white/10 text-white transition-all active:scale-90 hover:bg-black/50"
-          >
-            <Share2 size={16} strokeWidth={1.75} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setFullscreen(true)} className={btnCls}>
+              <Expand size={15} strokeWidth={1.75} />
+            </button>
+            <button
+              onClick={() => navigator.share?.({ title: post.title, url: window.location.href })}
+              className={btnCls}
+            >
+              <Share2 size={16} strokeWidth={1.75} />
+            </button>
+          </div>
         </div>
       </div>
 
