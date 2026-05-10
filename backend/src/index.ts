@@ -1,14 +1,16 @@
+/* backend/src/index.ts — server entry point.
+ * Loads environment variables from .env (dotenv/config), then starts the
+ * Express HTTP server on the port provided by the PORT env var.
+ * PORT is required — if missing or non-numeric the process exits immediately. */
+
 import "dotenv/config";
 import app from "./app";
-
 import { logger } from "./lib/logger";
 
 const rawPort = process.env["PORT"];
 
 if (!rawPort) {
-  throw new Error(
-    "PORT environment variable is required but was not provided.",
-  );
+  throw new Error("PORT environment variable is required but was not provided.");
 }
 
 const port = Number(rawPort);
@@ -22,6 +24,5 @@ app.listen(port, (err) => {
     logger.error({ err }, "Error listening on port");
     process.exit(1);
   }
-
   logger.info({ port }, "Server listening");
 });

@@ -1,5 +1,16 @@
+/* lib/email.service.ts — Gmail SMTP transporter for OTP emails.
+ *
+ * The transporter is created lazily on first use (not at module load time)
+ * so the server starts cleanly even if SMTP credentials are not set.
+ * In development without credentials, the OTP is logged to the console instead
+ * of being sent — useful for local testing without a real email account.
+ *
+ * Required env vars: SMTP_USER (Gmail address), SMTP_PASS (App Password) */
+
 import nodemailer from "nodemailer";
 
+/* Build a nodemailer transport using Gmail SMTP.
+ * Returns null if SMTP credentials are not available. */
 function buildTransporter() {
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
@@ -14,6 +25,7 @@ function buildTransporter() {
   });
 }
 
+/* Module-level singleton — created once on first call to getTransporter() */
 let _transporter: ReturnType<typeof nodemailer.createTransport> | null = null;
 
 function getTransporter() {
@@ -23,6 +35,9 @@ function getTransporter() {
   return _transporter;
 }
 
+/* Send a 6-digit OTP to the given email address.
+ * Falls back to console.log in development when no SMTP is configured.
+ * Throws HTTP 503 in production if SMTP is not configured. */
 export async function sendOtpEmail(to: string, otp: string, name: string): Promise<void> {
   const transporter = getTransporter();
 
@@ -40,7 +55,9 @@ export async function sendOtpEmail(to: string, otp: string, name: string): Promi
     from,
     to,
     subject: "Your Photogram verification code",
+    /* Plain-text fallback for clients that don't render HTML */
     text: `Hi ${name},\n\nYour verification code is: ${otp}\n\nIt expires in 10 minutes. Do not share it with anyone.\n\n— Photogram`,
+    /* HTML email with Photogram dark-themed design */
     html: `
 <!DOCTYPE html>
 <html>
