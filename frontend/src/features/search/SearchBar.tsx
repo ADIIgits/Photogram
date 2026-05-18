@@ -22,7 +22,7 @@ import {
   clickSuggestion,
   saveSearch,
   type Suggestion,
-} from "@workspace/api-client-react";
+} from "../../api-client";
 
 interface UserLocation {
   lat: number;

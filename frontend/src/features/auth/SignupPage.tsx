@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { useSendOtp, useVerifyOtp } from "@workspace/api-client-react";
+import { useSendOtp, useVerifyOtp } from "../../api-client";
 import { useAuth } from "./context";
 import {
   Aperture,

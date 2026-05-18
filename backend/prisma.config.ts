@@ -1,6 +1,8 @@
 import "dotenv/config";
 import path from "node:path";
-import { defineConfig,env } from "prisma/config";
+import { defineConfig } from "prisma/config";
+
+const dbUrl = process.env.DATABASE_URL || process.env.NEON_DATABASE_URL || "postgresql://placeholder:placeholder@localhost:5432/placeholder";
 
 export default defineConfig({
   schema: path.join("prisma", "schema.prisma"),
@@ -10,6 +12,6 @@ export default defineConfig({
   },
 
   datasource: {
-    url: env("DATABASE_URL"),
+    url: dbUrl,
   },
 });

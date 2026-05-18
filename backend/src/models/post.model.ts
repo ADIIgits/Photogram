@@ -2,7 +2,7 @@
  * All functions are thin wrappers around Prisma queries.
  * Business logic (ownership checks, view enrichment) lives in post.service.ts. */
 
-import { prisma, type Post } from "@workspace/db";
+import { prisma, type Post } from "../db";
 
 export type PostRow = Post;
 

@@ -21,7 +21,7 @@ import {
   getGetFeedQueryKey,
   getListPostsQueryKey,
   getGetDiscoverQueryKey,
-} from "@workspace/api-client-react";
+} from "../../api-client";
 import { useAuth } from "@/features/auth/context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -199,7 +199,7 @@ export default function PostDetailPage() {
             {/* Author row */}
             <div className="flex items-center justify-between">
               <Link href={`/profile/${post.user.id}`} className="flex items-center gap-3">
-                <Avatar className="w-10 h-10 ring-2" style={{ ringColor: "var(--pg-border)" }}>
+                <Avatar className="w-10 h-10" style={{ boxShadow: "0 0 0 2px var(--pg-border)" }}>
                   <AvatarImage src={post.user.avatarUrl || ""} />
                   <AvatarFallback
                     className="text-xs uppercase"

@@ -4,7 +4,7 @@
  * Uses a brickwork-style 2-column grid where every 7th post spans full width
  * to create visual rhythm (inspired by magazine layouts). */
 
-import { useGetFeed, getGetFeedQueryKey } from "@workspace/api-client-react";
+import { useGetFeed, getGetFeedQueryKey } from "../../api-client";
 import { Layout } from "@/components/shared/Layout";
 import { PostCard } from "./PostCard";
 import { useAuth } from "@/features/auth/context";

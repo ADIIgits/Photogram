@@ -12,7 +12,7 @@ import {
   useUploadImage,
   getGetMeQueryKey,
   getGetUserQueryKey,
-} from "@workspace/api-client-react";
+} from "../../api-client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Camera, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { useLocation } from "wouter";

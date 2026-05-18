@@ -14,7 +14,7 @@ import {
   getGetUserQueryKey,
   getGetUserPostsQueryKey,
   getGetFeedQueryKey,
-} from "@workspace/api-client-react";
+} from "../../api-client";
 import { Layout } from "@/components/shared/Layout";
 import { useAuth } from "@/features/auth/context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -152,8 +152,8 @@ export default function ProfilePage() {
           {/* ── Avatar + follow/unfollow action row ── */}
           <div className="flex justify-between items-end relative -mt-9 mb-4">
             <Avatar
-              className="w-[72px] h-[72px] ring-2 border"
-              style={{ ringColor: "var(--pg-avatar-ring)", borderColor: "var(--pg-border-strong)" }}
+              className="w-[72px] h-[72px] border"
+              style={{ boxShadow: "0 0 0 2px var(--pg-avatar-ring)", borderColor: "var(--pg-border-strong)" }}
             >
               <AvatarImage src={profile.avatarUrl || ""} className="object-cover" />
               <AvatarFallback

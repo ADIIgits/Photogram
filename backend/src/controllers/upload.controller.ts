@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { UploadImageBody } from "@workspace/api-zod";
+import { UploadImageBody } from "../api-validators";
 import { processImageUpload } from "../services/upload.service";
 
 export async function uploadImage(req: Request, res: Response): Promise<void> {

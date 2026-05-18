@@ -2,7 +2,7 @@
  * All functions are thin Prisma wrappers.
  * toSafeUser strips the passwordHash before any User object leaves the server. */
 
-import { prisma, type User } from "@workspace/db";
+import { prisma, type User } from "../db";
 
 export type UserRow = User;
 /* SafeUser is the shape sent to the client — never includes the password hash */

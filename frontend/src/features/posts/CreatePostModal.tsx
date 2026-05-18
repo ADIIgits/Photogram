@@ -8,7 +8,7 @@ import {
   getListPostsQueryKey,
   getGetDiscoverQueryKey,
   getGetUserPostsQueryKey,
-} from "@workspace/api-client-react";
+} from "../../api-client";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { Image as ImageIcon, Loader2, X, Camera, ChevronDown } from "lucide-react";

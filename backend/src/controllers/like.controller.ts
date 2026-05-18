@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { LikePostParams, UnlikePostParams, GetPostLikesParams } from "@workspace/api-zod";
+import { LikePostParams, UnlikePostParams, GetPostLikesParams } from "../api-validators";
 import * as LikeService from "../services/like.service";
 
 export async function likePost(req: Request, res: Response): Promise<void> {

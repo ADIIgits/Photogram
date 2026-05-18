@@ -1,4 +1,4 @@
-import { prisma, type Comment } from "@workspace/db";
+import { prisma, type Comment } from "../db";
 import { toSafeUser } from "./user.model";
 
 export type CommentRow = Comment;

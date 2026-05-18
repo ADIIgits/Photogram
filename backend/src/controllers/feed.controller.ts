@@ -1,12 +1,12 @@
 import type { Request, Response } from "express";
-import { GetFeedQueryParams, GetDiscoverQueryParams } from "@workspace/api-zod";
+import { GetFeedQueryParams, GetDiscoverQueryParams } from "../api-validators";
 import {
   getFeedPosts,
   getDiscoverPosts,
   buildPostView,
 } from "../services/post.service";
 import { getFollowingIds } from "../models/follow.model";
-import { prisma } from "@workspace/db";
+import { prisma } from "../db";
 
 export async function getFeed(req: Request, res: Response): Promise<void> {
   const query = GetFeedQueryParams.safeParse(req.query);

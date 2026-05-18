@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { useLogin } from "@workspace/api-client-react";
+import { useLogin } from "../../api-client";
 import { useAuth } from "./context";
 import { Loader2, Aperture, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";

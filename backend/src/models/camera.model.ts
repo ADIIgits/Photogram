@@ -1,4 +1,4 @@
-import { prisma, type Camera } from "@workspace/db";
+import { prisma, type Camera } from "../db";
 
 export type CameraRow = Camera;
 export type CreateCameraData = { name: string; iconUrl?: string | null };

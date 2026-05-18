@@ -1,4 +1,4 @@
-import { prisma, type Suggestion } from "@workspace/db";
+import { prisma, type Suggestion } from "../db";
 
 export type SuggestionRow = Suggestion;
 

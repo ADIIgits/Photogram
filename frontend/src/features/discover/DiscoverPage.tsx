@@ -9,7 +9,7 @@
 
 import { useMemo, useState } from "react";
 import { useSearch, Link } from "wouter";
-import { useGetDiscover, getGetDiscoverQueryKey } from "@workspace/api-client-react";
+import { useGetDiscover, getGetDiscoverQueryKey } from "../../api-client";
 import { Layout } from "@/components/shared/Layout";
 import { Loader2, Heart, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";

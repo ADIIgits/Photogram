@@ -1,4 +1,4 @@
-import { prisma } from "@workspace/db";
+import { prisma } from "../db";
 import { toSafeUser } from "./user.model";
 
 export async function findLike(postId: number, userId: number) {

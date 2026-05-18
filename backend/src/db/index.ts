@@ -1,18 +1,7 @@
-/* shared/db/src/index.ts — Prisma client singleton.
- *
- * Uses @prisma/adapter-pg (the "library" engine) which communicates with
- * Postgres via the pg driver rather than spawning a native binary.
- * This is required for Prisma 7+ in edge/serverless-style environments.
- *
- * Connection priority:
- *   1. NEON_DATABASE_URL — the Neon PostgreSQL connection string (preferred)
- *   2. DATABASE_URL      — fallback for local development or other providers
- *
- * The globalThis pattern prevents creating multiple Prisma instances during
- * hot-module reloads in development. */
-
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import pkg from "pg";
+const { Pool } = pkg;
 
 /* Prefer Neon's pooled URL; fall back to the generic DATABASE_URL */
 const dbUrl = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
@@ -31,7 +20,9 @@ const globalForPrisma = globalThis as unknown as {
 function createClient(): PrismaClient {
   /* PrismaPg adapter connects via the pg connection string instead of the
    * default binary engine. Required for Prisma 7 "library" engine mode. */
-  const adapter = new PrismaPg({ connectionString: dbUrl! });
+  const pool = new Pool({ connectionString: dbUrl });
+  const adapter = new PrismaPg(pool);
+  
   return new PrismaClient({
     adapter,
     /* Log warnings/errors in dev; errors only in production */

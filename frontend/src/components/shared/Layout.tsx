@@ -9,7 +9,7 @@ import { useAuth } from "@/features/auth/context";
 import { useTheme } from "@/contexts/ThemeContext";
 import { CreatePostModal } from "@/features/posts/CreatePostModal";
 import { Home, Compass, User, Aperture, LogOut, Settings, Plus, Sun, Moon } from "lucide-react";
-import { useLogout } from "@workspace/api-client-react";
+import { useLogout } from "../../api-client";
 import { motion } from "framer-motion";
 
 export function Layout({ children }: { children: React.ReactNode }) {

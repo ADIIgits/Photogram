@@ -11,7 +11,7 @@
  * automatically by the API client's custom-fetch layer. */
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { useGetMe, getGetMeQueryKey, type User } from "@workspace/api-client-react";
+import { useGetMe, getGetMeQueryKey, type User } from "../../api-client";
 import { useLocation } from "wouter";
 
 interface AuthContextType {

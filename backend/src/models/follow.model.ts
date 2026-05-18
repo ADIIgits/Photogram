@@ -1,4 +1,4 @@
-import { prisma } from "@workspace/db";
+import { prisma } from "../db";
 
 export async function findFollow(followerId: number, followingId: number) {
   return prisma.follow.findUnique({

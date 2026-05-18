@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { SignupBody, LoginBody, RefreshTokenBody, SendOtpBody, VerifyOtpBody } from "@workspace/api-zod";
+import { SignupBody, LoginBody, RefreshTokenBody, SendOtpBody, VerifyOtpBody } from "../api-validators";
 import * as AuthService from "../services/auth.service";
 import * as OtpService from "../services/otp.service";
 

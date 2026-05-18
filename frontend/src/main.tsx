@@ -3,7 +3,7 @@
  * so every request automatically includes the user's access token. */
 
 import { createRoot } from "react-dom/client";
-import { setAuthTokenGetter } from "@workspace/api-client-react";
+import { setAuthTokenGetter } from "./api-client";
 import App from "./App";
 import "./index.css";
 

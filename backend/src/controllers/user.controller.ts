@@ -7,7 +7,7 @@ import {
   UnfollowUserParams,
   GetUserPostsParams,
   GetUserPostsQueryParams,
-} from "@workspace/api-zod";
+} from "../api-validators";
 import * as UserService from "../services/user.service";
 import { getUserPosts as getUserPostsService } from "../services/post.service";
 

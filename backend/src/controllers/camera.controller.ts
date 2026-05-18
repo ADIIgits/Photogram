@@ -5,7 +5,7 @@ import {
   GetCameraParams,
   UpdateCameraParams,
   DeleteCameraParams,
-} from "@workspace/api-zod";
+} from "../api-validators";
 import * as CameraService from "../services/camera.service";
 
 export async function listCameras(_req: Request, res: Response): Promise<void> {

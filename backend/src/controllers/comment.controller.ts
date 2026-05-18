@@ -4,7 +4,7 @@ import {
   ListCommentsParams,
   CreateCommentParams,
   DeleteCommentParams,
-} from "@workspace/api-zod";
+} from "../api-validators";
 import * as CommentService from "../services/comment.service";
 
 export async function listComments(req: Request, res: Response): Promise<void> {

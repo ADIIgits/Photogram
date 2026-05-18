@@ -6,7 +6,7 @@ import {
   UpdatePostParams,
   DeletePostParams,
   ListPostsQueryParams,
-} from "@workspace/api-zod";
+} from "../api-validators";
 import * as PostService from "../services/post.service";
 
 export async function listPosts(req: Request, res: Response): Promise<void> {

@@ -30,7 +30,7 @@ import {
 import { findUserById, toSafeUser } from "../models/user.model";
 import { findCameraById } from "../models/camera.model";
 import { countLikesByPost, findLike } from "../models/like.model";
-import { prisma } from "@workspace/db";
+import { prisma } from "../db";
 
 /* Count comments for a post — kept local to this service to avoid a circular import */
 async function countCommentsByPost(postId: number): Promise<number> {

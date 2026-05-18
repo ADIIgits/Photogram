@@ -4,9 +4,9 @@
  * list that shows this post updates instantly without a network round-trip. */
 
 import { Link } from "wouter";
-import type { Post } from "@workspace/api-client-react";
+import type { Post } from "../../api-client";
 import { Heart, MessageCircle, Camera as CameraIcon } from "lucide-react";
-import { useLikePost, useUnlikePost } from "@workspace/api-client-react";
+import { useLikePost, useUnlikePost } from "../../api-client";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   getListPostsQueryKey,
@@ -14,7 +14,7 @@ import {
   getGetDiscoverQueryKey,
   getGetUserPostsQueryKey,
   getGetPostQueryKey,
-} from "@workspace/api-client-react";
+} from "../../api-client";
 import { useAuth } from "@/features/auth/context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion } from "framer-motion";
