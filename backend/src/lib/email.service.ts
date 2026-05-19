@@ -9,9 +9,11 @@
 
 import nodemailer from "nodemailer";
 
-/* Build a nodemailer transport using Gmail SMTP.
+/* Build a nodemailer transport using generic SMTP or Gmail.
  * Returns null if SMTP credentials are not available. */
 function buildTransporter() {
+  const host = process.env.SMTP_HOST;
+  const port = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587;
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
 
@@ -19,6 +21,21 @@ function buildTransporter() {
     return null;
   }
 
+  // If host is explicitly set, use custom SMTP config (e.g. Brevo or Sendgrid)
+  if (host) {
+    const secure = process.env.SMTP_SECURE === "true" || port === 465;
+    return nodemailer.createTransport({
+      host,
+      port,
+      secure,
+      auth: { user, pass },
+      connectionTimeout: 10000, // 10 seconds
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
+    });
+  }
+
+  // Default to gmail service config if SMTP_HOST is not provided
   return nodemailer.createTransport({
     service: "gmail",
     auth: { user, pass },
@@ -49,7 +66,8 @@ export async function sendOtpEmail(to: string, otp: string, name: string): Promi
     throw Object.assign(new Error("Email service not configured"), { status: 503 });
   }
 
-  const from = `"Photogram" <${process.env.SMTP_USER}>`;
+  const fromEmail = process.env.SMTP_FROM || process.env.SMTP_USER;
+  const from = fromEmail?.includes("<") ? fromEmail : `"Photogram" <${fromEmail}>`;
 
   await transporter.sendMail({
     from,
