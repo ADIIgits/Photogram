@@ -1,10 +1,4 @@
-/* lib/email.service.ts — Gmail SMTP transporter for OTP emails.
- *
- * The transporter is created lazily on first use (not at module load time)
- * so the server starts cleanly even if SMTP credentials are not set.
- * In development without credentials, the OTP is logged to the console instead
- * of being sent — useful for local testing without a real email account.
- *
+/* 
  * Required env vars: SMTP_USER (Gmail address), SMTP_PASS (App Password) */
 
 import nodemailer from "nodemailer";
