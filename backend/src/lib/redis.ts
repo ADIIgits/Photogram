@@ -8,10 +8,12 @@ const url = process.env.REDIS_URL;
 
 if (url) {
   try {
+    const isTls = url.startsWith("rediss:");
     client = new Redis(url, {
       lazyConnect: true,
       maxRetriesPerRequest: 1,
       enableOfflineQueue: false,
+      ...(isTls ? { tls: { rejectUnauthorized: false } } : {}),
     });
 
     client.on("connect", () => {
