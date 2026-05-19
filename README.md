@@ -2,100 +2,165 @@
 
 ## Overview
 
-Photogram is a full-stack social media web app for photographers. Dark, cinematic aesthetic. Built with React + Vite frontend and Node.js/Express backend.
+Photogram is a full-stack social media web app tailored for photographers, featuring a dark, cinematic aesthetic. It is built with a React + Vite frontend and a Node.js/Express backend.
 
-## Stack
+---
 
-- **Monorepo tool**: pnpm workspaces
-- **Node.js version**: 24
-- **Package manager**: pnpm
-- **TypeScript version**: 5.9
-- **Frontend**: React + Vite + TailwindCSS (frontend)
-- **API framework**: Express 5 (backend)
-- **Database**: PostgreSQL + Prisma 7 (with `@prisma/adapter-pg` driver adapter — Prisma 7 requires it)
-- **Cache**: Optional Redis via `REDIS_URL` (silently falls back to DB if not set)
-- **Auth**: JWT (access + refresh tokens) via bcryptjs + jsonwebtoken
-- **Validation**: Zod (`zod/v4`)
-- **API codegen**: Orval (from OpenAPI spec)
-- **Build**: esbuild (CJS bundle)
-- **State**: TanStack React Query (generated hooks)
+## Technical Stack
 
-## Features
+* **Node.js**: v20 / v24
+* **Package Manager**: npm (Standard individual packages)
+* **Frontend**: React + Vite + Tailwind CSS v4
+* **Backend API**: Express 5
+* **Database & ORM**: PostgreSQL + Prisma 7 (using the `@prisma/adapter-pg` driver adapter)
+* **Caching Layer**: Optional Redis (gracefully falls back to Postgres if unconfigured)
+* **Authentication**: JWT (short-lived access token + long-lived refresh token in cookies) via `bcryptjs` and `jsonwebtoken`
+* **Validation**: Zod
+* **API Codegen**: Orval (generates React Query hooks directly from OpenAPI spec)
 
-- Authentication (signup/login/logout/refresh)
-- User profiles with follow/unfollow
-- Posts with images, titles, captions, camera references
-- Likes (unique per user/post)
-- Comments
-- Camera system (admin-controlled list of camera models)
-- Personalized feed (posts from followed users)
-- Discover/Explore page (trending by likes) with text search
-- Search bar with autocomplete: location-aware suggestions (haversine ranking) + popular fallback, Redis-cached
-- Platform stats summary
+---
 
-## Architecture Notes
+## Project Structure
 
-- **Server layout** (`backend/src/`): `models/` (Prisma queries) → `services/` (business logic) → `controllers/` (req/res) → `routes/` (Express).
-- **Client layout** (`frontend/src/features/`): one folder per feature (`auth`, `posts`, `discover`, `profile`, `search`).
-- **DB**: Prisma schema in `shared/db/prisma/schema.prisma`. Datasource URL is loaded in `shared/db/prisma.config.ts`.
-- **Suggestions table** uses uuid PK (new table); all other tables preserve the original serial/autoincrement int IDs.
-- **API codegen quirk**: after running `pnpm --filter @workspace/api-spec run codegen`, rewrite `shared/api-validators/src/index.ts` to only `export * from "./generated/api";` (orval `clean: true` regenerates an export of `./generated/api.schemas` which doesn't exist for the zod target).
+The project is structured as two independent, self-contained `npm` packages:
 
-## Key Commands
-
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- `pnpm --filter @workspace/api-server run dev` — run API server locally
-- `pnpm --filter @workspace/photogram run dev` — run frontend locally
-
-## Important: After Codegen
-
-After running codegen, always fix `shared/api-validators/src/index.ts` to only export from `./generated/api` (codegen regenerates the file with extra duplicate exports):
-
-```ts
-export * from "./generated/api";
+```
+photogram/
+├── backend/                  # Express 5 API Server & Prisma Database layer
+│   ├── api-spec/             # OpenAPI spec definitions and Orval config
+│   │   ├── openapi.yaml      # The OpenAPI 3.0 specification
+│   │   └── orval.config.ts   # Configuration for Orval client generator
+│   ├── prisma/
+│   │   └── schema.prisma     # Prisma database schema definition
+│   ├── src/                  # Backend application source code
+│   │   ├── config/           # App configuration and environment validation
+│   │   ├── controllers/      # Request/Response handlers
+│   │   ├── db/               # Prisma Client initialization & adapter
+│   │   ├── lib/              # Utility helpers (auth, email, redis, otp, logger)
+│   │   ├── routes/           # Express API endpoints
+│   │   └── index.ts          # Server entry point
+│   ├── .env                  # Backend environment variables
+│   └── package.json
+│
+├── frontend/                 # React + Vite + Tailwind CSS Frontend
+│   ├── src/
+│   │   ├── api-client/       # Generated React Query hooks and custom fetch client
+│   │   ├── components/       # Common reusable UI components (shadcn/ui-based)
+│   │   ├── features/         # Feature-based pages (auth, posts, discover, profile, search)
+│   │   └── main.tsx          # Frontend entry point
+│   ├── .env                  # Frontend environment variables
+│   └── package.json
 ```
 
-## API Routes
+---
 
-- `POST /api/auth/signup` — Create account
-- `POST /api/auth/login` — Login
-- `GET /api/auth/me` — Get current user
-- `POST /api/auth/refresh` — Refresh tokens
-- `GET /api/users/:id` — Get user profile
-- `PATCH /api/users/:id` — Update profile
-- `POST /api/users/:id/follow` — Follow user
-- `DELETE /api/users/:id/follow` — Unfollow user
-- `GET /api/users/:id/posts` — Get user's posts
-- `GET /api/posts` — Global feed
-- `POST /api/posts` — Create post
-- `GET /api/posts/:id` — Get post
-- `PATCH /api/posts/:id` — Update post
-- `DELETE /api/posts/:id` — Delete post
-- `POST /api/posts/:id/like` — Like post
-- `DELETE /api/posts/:id/like` — Unlike post
-- `GET /api/posts/:id/comments` — List comments
-- `POST /api/posts/:id/comments` — Create comment
-- `DELETE /api/comments/:id` — Delete comment
-- `GET /api/cameras` — List cameras
-- `POST /api/cameras` — Create camera (admin)
-- `GET /api/feed` — Personalized feed
-- `GET /api/discover` — Discover/trending
-- `GET /api/stats/summary` — Platform stats
-- `POST /api/upload/image` — Upload image (mock/passthrough)
+## Environment Variables Configuration
 
-## Demo Accounts
+Both the frontend and backend require a `.env` file to be created in their respective folders before starting.
 
-- alex@photogram.app / demo1234
-- maya@photogram.app / demo1234
+### 1. Backend Environment (`backend/.env` & Root `/.env`)
+Create a `.env` file in the `backend/` directory (or use the one in the root workspace) with the following content:
 
-## Database Schema
+```ini
+# Server Port & Mode
+PORT=8080
+NODE_ENV=development
 
-- `users` — id, name, email, password_hash, avatar_url, bio, is_admin, created_at, updated_at
-- `cameras` — id, name, icon_url
-- `posts` — id, title, caption, image_url, user_id, camera_id, created_at, updated_at
-- `likes` — user_id, post_id, created_at (unique constraint)
-- `comments` — id, content, user_id, post_id, created_at
-- `follows` — follower_id, following_id, created_at (unique constraint)
+# JWT Security
+SESSION_SECRET=photogram-dev-secret-change-me-in-production
+
+# PostgreSQL Database Connection
+DATABASE_URL="postgresql://neondb_owner:YOUR_PASS@YOUR_HOST:5432/neondb?sslmode=require"
+
+# (Optional) Caching
+# REDIS_URL=redis://localhost:6379
+
+# (Optional for Dev, Required for Prod) Gmail SMTP Transporter for OTP Emails
+# In development, leave blank to print OTPs directly to your console!
+SMTP_USER=""
+SMTP_PASS=""
+```
+
+### 2. Frontend Environment (`frontend/.env`)
+Create a `.env` file in the `frontend/` directory:
+
+```ini
+# In development, leave commented out to use the local Vite proxy
+# VITE_API_URL=http://localhost:8080
+
+# API server URL for production builds
+VITE_API_URL=https://your-production-backend-url.com
+```
+
+---
+
+## Getting Started
+
+Follow these steps to set up and run the application locally.
+
+### Step 1: Database Setup
+1. Open your terminal and navigate to the `backend/` folder:
+   ```bash
+   cd backend
+   ```
+2. Install the backend dependencies:
+   ```bash
+   npm install
+   ```
+3. Push the Prisma database schema to your PostgreSQL database:
+   ```bash
+   npx prisma db push
+   ```
+
+### Step 2: Running the Backend
+1. In the `backend/` directory, start the API development server:
+   ```bash
+   npm run dev
+   ```
+   *The server will start listening on port `8080` (or the port defined in your `.env` file).*
+
+### Step 3: Running the Frontend
+1. Open a new terminal tab/window and navigate to the `frontend/` folder:
+   ```bash
+   cd frontend
+   ```
+2. Install the frontend dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the Vite development server:
+   ```bash
+   npm run dev
+   ```
+   *The client will start, typically on port `5173`. It is configured to automatically proxy `/api` requests to your backend on `http://localhost:8080`.*
+
+---
+
+## API Client & Codegen Integration
+
+The project uses **Orval** to generate TanStack React Query hooks directly from the OpenAPI specification:
+* The API contract is defined in `backend/api-spec/openapi.yaml`.
+* The generated client (including all queries, mutations, and TypeScript models) is written directly to `frontend/src/api-client/generated/`.
+
+To regenerate the API client after making changes to `openapi.yaml`:
+1. Navigate to the API spec folder:
+   ```bash
+   cd backend/api-spec
+   ```
+2. Install spec dependencies:
+   ```bash
+   npm install
+   ```
+3. Run the codegen script:
+   ```bash
+   npm run codegen
+   ```
+
+---
+
+## Features Showcase
+
+* **OTP Authentication**: Register with email verification codes. If SMTP is not set up during development, look at the backend terminal to get your code.
+* **Cinematic Dark Design**: Crafted meticulously with custom dark mode colors and custom gradients using Tailwind CSS v4.
+* **Smart Location Search**: Autocomplete bar for search queries leveraging a location-aware haversine ranking algorithm, cached gracefully using Redis if available.
+* **Personalized Feed & Explore**: View posts specifically from creators you follow, or discover trending posts ranked dynamically by likes on the Discover page.
