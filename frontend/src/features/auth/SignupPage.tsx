@@ -17,8 +17,8 @@ import { motion, AnimatePresence } from "framer-motion";
 
 type Step = "form" | "otp" | "success";
 
-function isGmail(email: string) {
-  return /^[a-zA-Z0-9._%+\-]+@gmail\.com$/i.test(email);
+function isValidEmail(email: string) {
+  return /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/i.test(email);
 }
 
 function useCountdown(targetIso: string | null) {
@@ -81,7 +81,7 @@ export default function SignupPage() {
 
   const validateEmail = (val: string) => {
     if (!val) return "Email is required.";
-    if (!isGmail(val)) return "Only Gmail addresses (@gmail.com) are accepted.";
+    if (!isValidEmail(val)) return "Please enter a valid email address.";
     return "";
   };
 
@@ -313,8 +313,7 @@ export default function SignupPage() {
 
           <h2 className="text-[32px] font-black tracking-tight text-white mb-1">Apply for Exhibition</h2>
           <p className="text-white/40 mb-8 text-sm">
-            Join a curated space for photographers.{" "}
-            <span className="font-mono text-[11px] text-white/25">Gmail only.</span>
+            Join a curated space for photographers.
           </p>
 
           <form onSubmit={handleSendOtp} className="space-y-3">
@@ -330,7 +329,7 @@ export default function SignupPage() {
             <div>
               <GlassInput
                 type="email"
-                placeholder="Gmail address (you@gmail.com)"
+                placeholder="Email address (you@example.com)"
                 value={email}
                 onChange={e => { setEmail(e.target.value); setEmailError(""); }}
                 onBlur={() => { if (email) setEmailError(validateEmail(email)); }}

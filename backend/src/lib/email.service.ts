@@ -50,27 +50,11 @@ function getTransporter() {
  * Falls back to console.log in development when no SMTP is configured.
  * Throws HTTP 503 in production if SMTP is not configured. */
 export async function sendOtpEmail(to: string, otp: string, name: string): Promise<void> {
-  const transporter = getTransporter();
-
-  if (!transporter) {
-    if (process.env.NODE_ENV === "development") {
-      console.log(`[DEV] OTP for ${to}: ${otp}`);
-      return;
-    }
-    throw Object.assign(new Error("Email service not configured"), { status: 503 });
-  }
-
+  const host = process.env.SMTP_HOST;
+  const pass = process.env.SMTP_PASS;
   const fromEmail = process.env.SMTP_FROM || process.env.SMTP_USER;
-  const from = fromEmail?.includes("<") ? fromEmail : `"Photogram" <${fromEmail}>`;
 
-  await transporter.sendMail({
-    from,
-    to,
-    subject: "Your Photogram verification code",
-    /* Plain-text fallback for clients that don't render HTML */
-    text: `Hi ${name},\n\nYour verification code is: ${otp}\n\nIt expires in 10 minutes. Do not share it with anyone.\n\n— Photogram`,
-    /* HTML email with Photogram dark-themed design */
-    html: `
+  const htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -111,6 +95,62 @@ export async function sendOtpEmail(to: string, otp: string, name: string): Promi
     </tr>
   </table>
 </body>
-</html>`,
+</html>`;
+
+  const textContent = `Hi ${name},\n\nYour verification code is: ${otp}\n\nIt expires in 10 minutes. Do not share it with anyone.\n\n— Photogram`;
+
+  if (host === "smtp-relay.brevo.com" && pass) {
+    let senderEmail = fromEmail || "adityalpu27@gmail.com";
+    let senderName = "Photogram";
+    if (senderEmail.includes("<")) {
+      const match = senderEmail.match(/(.*)<(.*)>/);
+      if (match) {
+        senderName = match[1].replace(/['"]/g, "").trim();
+        senderEmail = match[2].trim();
+      }
+    }
+
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "accept": "application/json",
+        "api-key": pass,
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({
+        sender: { name: senderName, email: senderEmail },
+        to: [{ email: to, name }],
+        subject: "Your Photogram verification code",
+        htmlContent,
+        textContent
+      })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Brevo HTTP API failed: ${response.status} ${errText}`);
+    }
+    return;
+  }
+
+  const transporter = getTransporter();
+
+  if (!transporter) {
+    if (process.env.NODE_ENV === "development") {
+      console.log(`[DEV] OTP for ${to}: ${otp}`);
+      return;
+    }
+    throw Object.assign(new Error("Email service not configured"), { status: 503 });
+  }
+
+  const from = fromEmail?.includes("<") ? fromEmail : `"Photogram" <${fromEmail}>`;
+
+  await transporter.sendMail({
+    from,
+    to,
+    subject: "Your Photogram verification code",
+    text: textContent,
+    html: htmlContent,
   });
 }
+
